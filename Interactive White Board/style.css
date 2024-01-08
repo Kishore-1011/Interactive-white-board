@@ -1,0 +1,88 @@
+body {
+    background-color: #047cfdb7;
+    display: flex;
+    height: 100vh;
+    margin: 0;
+}
+
+.row {
+    padding: 10px;
+    gap: 10px;
+}
+
+#white-board {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    overflow: hidden;
+    position: relative;
+    border-radius: 10px;
+    height: 90vh;
+}
+
+#control-panel {
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f0f0f0;
+    padding: 20px;
+    box-sizing: border-box;
+    height: 90vh;
+}
+
+#add-text-btn {
+    margin-bottom: 10px;
+}
+
+#font-size, #text-color {
+    margin-bottom: 10px;
+}
+
+#font-size-label, #text-color-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.text-box {
+    position: absolute;
+    padding: 5px;
+    cursor: move;
+}
+
+.custom-range {
+    width: 100%;
+    height: 1.4rem;
+    cursor: pointer;
+    background-color: #d1d3e2;
+}
+
+.custom-range-thumb {
+    width: 1rem;
+    height: 1.4rem;
+    background-color: #007bff;
+    border: 0;
+    border-radius: 0;
+    transition: background-color .15s ease-in-out;
+}
+
+.selected {
+    border: 2px solid #007bff;
+}
+
+#undo-redo-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.btn-undo-redo {
+    width: 48%;
+}
+
+#delete-btn {
+    width: 25%;
+    font-size: 1.5rem;
+    margin-top: 10px;
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive White Board</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/477b733705.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row m-5">
+        <div id="white-board" class="col-md-9"></div>
+        <div id="control-panel" class="col-md-3">
+            <div id="undo-redo-buttons" class="mb-3">
+                <button id="undo-btn" class="btn btn-secondary btn-undo-redo">Undo</button>
+                <button id="redo-btn" class="btn btn-secondary btn-undo-redo">Redo</button>
+            </div>
+
+            <button id="add-text-btn" class="btn btn-primary">Add Text</button>
+            <br>
+            <label for="font-size" id="font-size-label">Font Size:</label>
+            <div class="input-group mb-3">
+                <input type="number" id="font-size" min="10" max="50" step="1" value="20" class="form-control">
+                <div class="input-group-append">
+                    <span class="input-group-text">px</span>
+                </div>
+            </div>
+
+            <label for="text-color" id="text-color-label">Text Color:</label>
+            <input type="color" id="text-color" value="#000000" class="form-control custom-range">
+
+            <button id="delete-btn" class="btn btn-danger mt-3"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+    </div>
+</div>
+<!-- Correct Order -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
