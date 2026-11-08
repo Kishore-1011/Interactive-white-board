@@ -27,8 +27,9 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Duplicate, copy and paste:** works on single objects and whole groups
 - **Undo and redo:** up to 100 steps, covering every change to the board
 - **Autosave:** the board is restored when you come back, using your browser's local storage
-- **Export and open:** save the board as a PNG image, or as a JSON file you can open again later
-- **Mouse and touch:** works with a mouse, a stylus or a finger, on phones as well as large screens
+- **Large canvas:** pan in any direction, zoom from 10% to 400%, and fit everything on screen in one click
+- **Export and open:** save the whole board as a PNG image, or as a JSON file you can open again later
+- **Mouse and touch:** works with a mouse, a stylus or a finger, with pinch to zoom on phones and tablets
 
 ## Keyboard shortcuts
 
@@ -42,6 +43,11 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 | <kbd>Ctrl</kbd> + <kbd>G</kbd> | Group |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd> | Ungroup |
 | <kbd>Ctrl</kbd> + <kbd>]</kbd> / <kbd>[</kbd> | Bring to front, send to back |
+| <kbd>Ctrl</kbd> + scroll | Zoom at the pointer |
+| <kbd>Ctrl</kbd> + <kbd>=</kbd> / <kbd>-</kbd> | Zoom in, zoom out |
+| <kbd>Ctrl</kbd> + <kbd>0</kbd> | Reset to 100% |
+| <kbd>Shift</kbd> + <kbd>1</kbd> | Fit everything on screen |
+| Scroll, or hold <kbd>Space</kbd> and drag | Pan |
 | <kbd>Shift</kbd> while resizing | Keep proportions |
 | <kbd>Shift</kbd> while rotating | Snap to 15° steps |
 | <kbd>Delete</kbd> or <kbd>Backspace</kbd> | Delete the selection |
