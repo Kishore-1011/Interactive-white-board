@@ -1,0 +1,99 @@
+/* Phone layout and reduced motion */
+
+@media (max-width: 767.98px) {
+    :root {
+        --topbar-height: 52px;
+    }
+
+    .topbar {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 4px;
+        padding: 0 6px;
+    }
+
+    .brand-mark,
+    .save-label,
+    .btn-label {
+        display: none;
+    }
+
+    .text-btn,
+    .primary-btn {
+        justify-content: center;
+        width: 40px;
+        padding: 0;
+    }
+
+    .topbar-left,
+    .topbar-center,
+    .topbar-right {
+        gap: 2px;
+    }
+
+    .board-name,
+    .number-input {
+        font-size: 16px; /* Stops phones zooming in when the field is tapped. */
+    }
+
+    .workspace {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .tool-rail {
+        order: 2;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 4px 6px;
+        border-top: 1px solid var(--border);
+        border-right: 0;
+    }
+
+    .rail-divider {
+        width: 1px;
+        height: 26px;
+        margin: 0;
+    }
+
+    .rail-spacer {
+        display: none;
+    }
+
+    .stage {
+        padding: 58px 8px 8px;
+    }
+
+    .context-bar {
+        top: 6px;
+        overflow-x: auto;
+    }
+
+    .zoom-controls {
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .toast {
+        bottom: 68px;
+    }
+
+    .context-hint {
+        display: none;
+    }
+
+    .context-group {
+        padding: 0 5px;
+    }
+
+    .range-input {
+        width: 84px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+    }
+}

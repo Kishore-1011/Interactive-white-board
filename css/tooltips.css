@@ -1,0 +1,49 @@
+/* Tooltips */
+
+@media (hover: hover) and (min-width: 768px) {
+    [data-tip] {
+        position: relative;
+    }
+
+    [data-tip]::after {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        z-index: 50;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: var(--tip-bg);
+        color: var(--tip-text);
+        content: attr(data-tip);
+        font-size: 12px;
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-50%);
+        transition: opacity 0.12s;
+        white-space: nowrap;
+    }
+
+    [data-tip]:hover::after,
+    [data-tip]:focus-visible::after {
+        opacity: 1;
+        transition-delay: 0.25s;
+    }
+
+    .tool-rail [data-tip]::after {
+        top: 50%;
+        left: calc(100% + 10px);
+        transform: translateY(-50%);
+    }
+
+    .zoom-controls [data-tip]::after {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+
+    .zoom-controls [data-tip]:last-child::after {
+        right: 0;
+        left: auto;
+        transform: none;
+    }
+}

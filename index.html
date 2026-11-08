@@ -15,7 +15,16 @@
                 || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         })();
     </script>
-    <link rel="stylesheet" href="style.css">
+    <!-- The order matters: later files can override earlier ones. -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/topbar.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/board.css">
+    <link rel="stylesheet" href="css/panels.css">
+    <link rel="stylesheet" href="css/tooltips.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
@@ -50,6 +59,16 @@
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
     <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     <symbol id="i-pan" viewBox="0 0 24 24"><path d="m5 9-3 3 3 3"/><path d="m9 5 3-3 3 3"/><path d="m15 19-3 3-3-3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></symbol>
+    <symbol id="i-align-left" viewBox="0 0 24 24"><path d="M4 3v18"/><rect x="8" y="6" width="12" height="4" rx="1"/><rect x="8" y="14" width="7" height="4" rx="1"/></symbol>
+    <symbol id="i-align-centre" viewBox="0 0 24 24"><path d="M12 3v18"/><rect x="5" y="6" width="14" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></symbol>
+    <symbol id="i-align-right" viewBox="0 0 24 24"><path d="M20 3v18"/><rect x="4" y="6" width="12" height="4" rx="1"/><rect x="9" y="14" width="7" height="4" rx="1"/></symbol>
+    <symbol id="i-align-top" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="6" y="8" width="4" height="12" rx="1"/><rect x="14" y="8" width="4" height="7" rx="1"/></symbol>
+    <symbol id="i-align-middle" viewBox="0 0 24 24"><path d="M3 12h18"/><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></symbol>
+    <symbol id="i-align-bottom" viewBox="0 0 24 24"><path d="M3 20h18"/><rect x="6" y="4" width="4" height="12" rx="1"/><rect x="14" y="9" width="4" height="7" rx="1"/></symbol>
+    <symbol id="i-distribute-x" viewBox="0 0 24 24"><path d="M4 3v18"/><path d="M20 3v18"/><rect x="9" y="7" width="6" height="10" rx="1"/></symbol>
+    <symbol id="i-distribute-y" viewBox="0 0 24 24"><path d="M3 4h18"/><path d="M3 20h18"/><rect x="7" y="9" width="10" height="6" rx="1"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></symbol>
+    <symbol id="i-magnet" viewBox="0 0 24 24"><path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3L6 15"/><path d="m5 8 4 4"/><path d="m12 15 4 4"/></symbol>
     <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
 </svg>
 
@@ -125,6 +144,9 @@
                 <input type="range" id="brush-size" class="range-input" min="1" max="30" step="1" value="4">
                 <span id="brush-value" class="context-value">4</span>
             </div>
+            <div class="context-group" data-show="multi">
+                <button id="align-btn" type="button" class="icon-btn icon-btn-small align-toggle" aria-label="Align and distribute" aria-haspopup="true" aria-expanded="false" aria-controls="align-menu" data-tip="Align"><svg class="icon icon-small"><use href="#i-align-centre"/></svg></button>
+            </div>
             <div class="context-group" data-show="selection">
                 <button id="front-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring to front" data-tip="To front"><svg class="icon icon-small"><use href="#i-front"/></svg></button>
                 <button id="forward-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring forward" data-tip="Forward"><svg class="icon icon-small"><use href="#i-forward"/></svg></button>
@@ -144,9 +166,21 @@
             <div class="context-group context-note" data-show="eraser">Drag across a stroke or shape to remove it</div>
         </div>
 
+        <div id="align-menu" class="align-menu" hidden>
+            <button type="button" class="icon-btn icon-btn-small" data-align="left" aria-label="Align left" data-tip="Left"><svg class="icon icon-small"><use href="#i-align-left"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-align="centre" aria-label="Align centres horizontally" data-tip="Centre"><svg class="icon icon-small"><use href="#i-align-centre"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-align="right" aria-label="Align right" data-tip="Right"><svg class="icon icon-small"><use href="#i-align-right"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-distribute="x" aria-label="Distribute horizontally" data-tip="Space across"><svg class="icon icon-small"><use href="#i-distribute-x"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-align="top" aria-label="Align top" data-tip="Top"><svg class="icon icon-small"><use href="#i-align-top"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-align="middle" aria-label="Align centres vertically" data-tip="Middle"><svg class="icon icon-small"><use href="#i-align-middle"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-align="bottom" aria-label="Align bottom" data-tip="Bottom"><svg class="icon icon-small"><use href="#i-align-bottom"/></svg></button>
+            <button type="button" class="icon-btn icon-btn-small" data-distribute="y" aria-label="Distribute vertically" data-tip="Space down"><svg class="icon icon-small"><use href="#i-distribute-y"/></svg></button>
+        </div>
+
         <div id="white-board">
             <div id="item-layer"></div>
             <div id="selection-layer">
+                <div id="guide-layer"></div>
                 <div id="selection-frame" hidden>
                     <span class="handle" data-handle="nw"></span>
                     <span class="handle" data-handle="n"></span>
@@ -162,7 +196,10 @@
             </div>
         </div>
 
-        <div class="zoom-controls" role="group" aria-label="Zoom">
+        <div class="zoom-controls" role="group" aria-label="View">
+            <button id="grid-btn" type="button" class="icon-btn icon-btn-small" aria-label="Show grid" aria-pressed="false" data-tip="Grid"><svg class="icon icon-small"><use href="#i-grid"/></svg></button>
+            <button id="snap-btn" type="button" class="icon-btn icon-btn-small" aria-label="Snapping" aria-pressed="true" data-tip="Snapping (hold Ctrl to skip)"><svg class="icon icon-small"><use href="#i-magnet"/></svg></button>
+            <span class="zoom-divider" aria-hidden="true"></span>
             <button id="zoom-out" type="button" class="icon-btn icon-btn-small" aria-label="Zoom out" data-tip="Zoom out (Ctrl+-)"><svg class="icon icon-small"><use href="#i-minus"/></svg></button>
             <button id="zoom-reset" type="button" class="zoom-label" aria-label="Reset zoom to 100%" data-tip="Reset to 100% (Ctrl+0)">100%</button>
             <button id="zoom-in" type="button" class="icon-btn icon-btn-small" aria-label="Zoom in" data-tip="Zoom in (Ctrl+=)"><svg class="icon icon-small"><use href="#i-plus"/></svg></button>
@@ -173,7 +210,23 @@
     </main>
 </div>
 
-<script src="script.js"></script>
+<!-- Plain scripts sharing one scope, so the page also works by double-clicking this file.
+     The order matters: dom, constants and state come first, input and main come last. -->
+<script src="js/dom.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/state.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/shapes.js"></script>
+<script src="js/render.js"></script>
+<script src="js/selection.js"></script>
+<script src="js/text-editing.js"></script>
+<script src="js/transforms.js"></script>
+<script src="js/snapping.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/preferences.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
 
 </body>
 </html>

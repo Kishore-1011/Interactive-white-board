@@ -1,0 +1,44 @@
+/* Colours and sizes for the light and dark themes */
+
+:root {
+    --stage: #ececef;
+    --chrome: #ffffff;
+    --hover: #f0f0f3;
+    --border: #e2e2e7;
+    --text: #1c1c21;
+    --muted: #6b6b76;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-soft: #e9e8fd;
+    --accent-text: #4338ca;
+    --on-accent: #ffffff;
+    --danger: #c92a2a;
+    --warning: #b45309;
+    --tip-bg: #1c1c21;
+    --tip-text: #ffffff;
+    --shadow: 0 4px 16px rgb(20 20 40 / 12%);
+    --page-shadow: 0 1px 3px rgb(20 20 40 / 12%), 0 8px 28px rgb(20 20 40 / 8%);
+    --topbar-height: 56px;
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    --stage: #0e0e11;
+    --chrome: #1b1b20;
+    --hover: #2a2a31;
+    --border: #303038;
+    --text: #f2f2f5;
+    --muted: #a3a3af;
+    --accent: #6366f1;
+    --accent-hover: #7c7ff5;
+    --accent-soft: #2e2d5c;
+    --accent-text: #c7c8fd;
+    --on-accent: #ffffff;
+    --danger: #ff8a8a;
+    --warning: #fbbf24;
+    --tip-bg: #f2f2f5;
+    --tip-text: #1c1c21;
+    --shadow: 0 4px 16px rgb(0 0 0 / 50%);
+    --page-shadow: 0 8px 28px rgb(0 0 0 / 50%);
+    color-scheme: dark;
+}
