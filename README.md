@@ -31,7 +31,8 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Layers:** move any object forward, backward, to the front or to the back
 - **Duplicate, copy and paste:** works on single objects and whole groups
 - **Undo and redo:** up to 100 steps, covering every change to the board
-- **Autosave:** the board is restored when you come back, using your browser's local storage
+- **Autosave:** the board is restored when you come back, with pictures kept in your browser's IndexedDB so they have plenty of room
+- **Forgiving by default:** Delete and Clear offer a one-click Undo, notes grow to fit their text, and long labels shrink to stay inside their shape
 - **Snapping and guides:** objects snap to each other's edges and centres while you move or resize them, with guide lines showing what lines up
 - **Align and distribute:** line up a selection or even out its spacing, with groups treated as single pieces
 - **Optional grid:** show a grid that objects and shapes snap to
@@ -111,7 +112,8 @@ Interactive-white-board/
 │   ├── text-editing.js     # Editing text in place
 │   ├── transforms.js       # Moving, resizing, rotating and rubber-band selection
 │   ├── arrows.js           # Arrows that stay attached to objects
-│   ├── images.js           # Adding and storing pictures
+│   ├── images.js           # Adding pictures to the board
+│   ├── asset-store.js      # Long-term picture storage in IndexedDB
 │   ├── palette.js          # Colours, fill, opacity, text style and pop-up menus
 │   ├── context-menu.js     # Right-click menu
 │   ├── boards.js           # Multiple saved boards
