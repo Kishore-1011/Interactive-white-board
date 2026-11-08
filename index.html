@@ -278,7 +278,10 @@
             <button id="fit-btn" type="button" class="icon-btn icon-btn-small" aria-label="Fit to screen" data-tip="Fit to screen (Shift+1)"><svg class="icon icon-small"><use href="#i-fit"/></svg></button>
         </div>
 
-        <p id="toast" class="toast" role="status"></p>
+        <div id="toast-box" class="toast">
+            <p id="toast" class="toast-text" role="status"></p>
+            <button id="toast-undo" type="button" class="toast-undo" hidden>Undo</button>
+        </div>
     </main>
 </div>
 
@@ -369,6 +372,7 @@
 <script src="js/constants.js"></script>
 <script src="js/state.js"></script>
 <script src="js/helpers.js"></script>
+<script src="js/asset-store.js"></script>
 <script src="js/shapes.js"></script>
 <script src="js/render.js"></script>
 <script src="js/selection.js"></script>

@@ -40,17 +40,30 @@ function createItemElement(item) {
     return element;
 }
 
+// Long labels shrink to stay inside their shape. The size the user chose is kept, so the
+// text grows back if the shape gets bigger or the label gets shorter.
+function fitShapeLabel(element, item) {
+    const text = element.querySelector('.shape-text');
+    const room = text.parentElement.clientHeight * (item.type === 'ellipse' ? ELLIPSE_TEXT_HEIGHT : 1);
+    let size = item.fontSize;
+    text.style.fontSize = size + 'px';
+    while (size > MIN_LABEL_FONT && text.offsetHeight > room) {
+        size -= 1;
+        text.style.fontSize = size + 'px';
+    }
+}
+
 function renderShapeLabel(element, item) {
     const text = element.querySelector('.shape-text');
     if (item.id !== editingId && text.innerText !== item.text) {
         text.innerText = item.text;
     }
-    text.style.fontSize = item.fontSize + 'px';
     text.style.fontFamily = FONTS[item.fontFamily];
     text.style.fontWeight = item.bold ? '700' : '';
     text.style.textAlign = item.align;
     text.style.color = item.textColor;
     element.classList.toggle('has-label', Boolean(item.text));
+    fitShapeLabel(element, item);
 }
 
 function renderItem(item) {
@@ -68,7 +81,7 @@ function renderItem(item) {
         element.style.fontWeight = item.bold ? '700' : '';
         element.style.textAlign = item.align;
         element.style.background = item.fill || '';
-        element.style.height = item.height === null ? '' : item.height + 'px';
+        element.style.minHeight = item.height === null ? '' : item.height + 'px'; // A note grows to fit its text.
         element.classList.toggle('note', item.note);
         element.style.width = item.width === null ? '' : item.width + 'px';
         element.style.maxWidth = item.width === null ? MAX_TEXT_WIDTH + 'px' : '';
@@ -301,6 +314,7 @@ function commit() {
         undoIndex = undoStack.length - 1;
         save(json);
         touchCurrentBoard();
+        dismissUndoToast();
     }
     updateButtons();
 }
@@ -311,6 +325,7 @@ function restore(index) {
     render();
     select(selectedIds.filter(findItem));
     save(undoStack[index]);
+    dismissUndoToast();
 }
 
 function undo() {

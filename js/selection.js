@@ -113,19 +113,29 @@ function addNote(position = {}) {
     });
 }
 
-function deleteSelected() {
-    if (selectedIds.length === 0 || selectionLocked()) {
-        return;
-    }
+function removeSelected() {
     items = items.filter((item) => !selectedIds.includes(item.id));
     selectedIds = [];
     commit();
 }
 
+function deleteSelected() {
+    if (selectedIds.length === 0 || selectionLocked()) {
+        return;
+    }
+    const count = selectedIds.length;
+    removeSelected();
+    showToast(count === 1 ? 'Deleted.' : `Deleted ${count} objects.`, true);
+}
+
 function clearBoard() {
+    if (items.length === 0) {
+        return;
+    }
     items = [];
     selectedIds = [];
     commit();
+    showToast('Board cleared.', true);
 }
 
 // Apply a style to every selected item it suits, leaving locked selections alone.
@@ -256,7 +266,7 @@ function copySelection() {
 function cutSelection() {
     if (!selectionLocked()) {
         copySelection();
-        deleteSelected();
+        removeSelected();
     }
 }
 

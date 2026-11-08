@@ -54,6 +54,16 @@ function finishNudge() {
     }
 }
 
+// How tall a note must be to show all of its text.
+function noteContentHeight(item) {
+    const element = elements.get(item.id);
+    const saved = element.style.minHeight;
+    element.style.minHeight = '0';
+    const height = element.offsetHeight;
+    element.style.minHeight = saved;
+    return Math.max(MIN_NOTE_SIZE, height);
+}
+
 function startResize(e, handle) {
     detachSelectedArrows();
     const selected = selectedItems();
@@ -69,6 +79,7 @@ function startResize(e, handle) {
         uniform: !single || isImage(single) || (isText(single) && !single.note && hx !== 0 && hy !== 0),
         textWidth: Boolean(single && isText(single) && !single.note && hy === 0),
         minSize: single && single.note ? MIN_NOTE_SIZE : MIN_RESIZE,
+        minHeight: single && single.note ? noteContentHeight(single) : null,
         targets: snapTargets(),
         starts: selected.map((item) => {
             const box = itemBox(item);
@@ -131,7 +142,7 @@ function continueResize(e) {
 
     const minWidth = gesture.textWidth ? MIN_TEXT_WIDTH : gesture.minSize;
     let newW = hx && frame.w >= FLAT_SIZE ? Math.max(minWidth, hx * (localX - anchorX)) : frame.w;
-    let newH = hy && frame.h >= FLAT_SIZE ? Math.max(gesture.minSize, hy * (localY - anchorY)) : frame.h;
+    let newH = hy && frame.h >= FLAT_SIZE ? Math.max(gesture.minHeight || gesture.minSize, hy * (localY - anchorY)) : frame.h;
     let sx = frame.w >= FLAT_SIZE ? newW / frame.w : 1;
     let sy = frame.h >= FLAT_SIZE ? newH / frame.h : 1;
 

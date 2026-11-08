@@ -147,6 +147,16 @@ function endPointer(e) {
 document.addEventListener('pointerup', endPointer);
 document.addEventListener('pointercancel', endPointer);
 
+toastUndo.addEventListener('click', undo);
+
+// A label shrinks as you type, not just when you finish.
+board.addEventListener('input', function () {
+    const item = editingId ? findItem(editingId) : null;
+    if (item && canHoldText(item)) {
+        fitShapeLabel(elements.get(item.id), item);
+    }
+});
+
 board.addEventListener('focusout', function (e) {
     const editable = e.target.closest('.text-box, .shape-text');
     const owner = editable && editable.closest('.item');

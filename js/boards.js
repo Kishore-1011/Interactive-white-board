@@ -148,6 +148,7 @@ function loadCurrentBoard() {
     undoIndex = 0;
     syncControls();
     updateButtons();
+    lastAssetLoad = finishAssetLoading();
 }
 
 function createBoard() {

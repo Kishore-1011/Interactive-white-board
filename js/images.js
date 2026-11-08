@@ -29,8 +29,9 @@ async function prepareImage(file) {
 }
 
 function createImageItem({ src, width, height }, centre) {
-    const assetId = 'a' + newId();
+    const assetId = newAssetId();
     assets.set(assetId, src);
+    storeAsset(assetId, src);
     const view = viewportSize();
     const limit = Math.min(IMAGE_PLACE_SIZE, (Math.min(view.w, view.h) * IMAGE_VIEW_SHARE) / camera.zoom);
     const scale = Math.min(1, limit / Math.max(width, height));
@@ -87,8 +88,11 @@ function usedAssets() {
     return used;
 }
 
-// Only rewrites stored image data when the set of images on the board has changed.
+// Only needed when IndexedDB isn't available. Only rewrites when the set of images has changed.
 function persistAssets() {
+    if (assetDb !== null) {
+        return;
+    }
     const used = usedAssets();
     const keys = Object.keys(used).join();
     if (keys !== savedAssetKeys) {

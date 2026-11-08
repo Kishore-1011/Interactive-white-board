@@ -154,11 +154,25 @@ function moveItem(item, start, dx, dy) {
 
 let toastTimer = null;
 
-function showToast(message) {
+function showToast(message, canUndo = false) {
     toast.textContent = message;
-    toast.classList.add('visible');
+    toastUndo.hidden = !canUndo;
+    toastBox.classList.add('visible');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('visible'), TOAST_MS);
+    toastTimer = setTimeout(() => toastBox.classList.remove('visible'), canUndo ? UNDO_TOAST_MS : TOAST_MS);
+}
+
+// An Undo button is only true until the next change, so it goes away then.
+function dismissUndoToast() {
+    if (!toastUndo.hidden) {
+        toastUndo.hidden = true;
+        toastBox.classList.remove('visible');
+    }
+}
+
+// Unique across visits, because pictures outlive the page.
+function newAssetId() {
+    return `a${Date.now().toString(36)}-${newId()}`;
 }
 
 function setSaveState(isSaved) {

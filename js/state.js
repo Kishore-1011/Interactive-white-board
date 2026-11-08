@@ -30,6 +30,11 @@ let spaceHeld = false;
 let pinch = null;
 const touches = new Map();
 
+let assetDb; // undefined while opening, null if IndexedDB isn't available.
+let pendingAssetWrites = [];
+let assetWriteFailed = false;
+let assetLoadToken = 0;
+let lastAssetLoad = Promise.resolve();
 const assets = new Map();
 let savedAssetKeys = null;
 let currentFill = null;

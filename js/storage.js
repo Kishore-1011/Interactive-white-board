@@ -86,7 +86,7 @@ function legacyItems(data) {
     ];
 }
 
-function parseBoard(json, storedAssets) {
+function parseBoard(json, storedAssets, keepMissingImages = false) {
     const data = JSON.parse(json);
     let raw = null;
     if (data && Array.isArray(data.items)) {
@@ -104,7 +104,7 @@ function parseBoard(json, storedAssets) {
     const boardAssets = validAssets(data.assets || storedAssets);
     return {
         name: data.name,
-        items: parsed.filter((item) => !isImage(item) || boardAssets[item.assetId]), // Skip pictures that are missing.
+        items: parsed.filter((item) => !isImage(item) || keepMissingImages || boardAssets[item.assetId]),
         assets: boardAssets,
     };
 }
@@ -114,8 +114,9 @@ function setBoard(data) {
     const idMap = new Map();
     const assetMap = new Map();
     Object.entries(data.assets).forEach(([key, source]) => {
-        const assetId = 'a' + newId();
+        const assetId = newAssetId();
         assets.set(assetId, source);
+        storeAsset(assetId, source);
         assetMap.set(key, assetId);
     });
     items = data.items.map((item) => {
@@ -130,7 +131,7 @@ function setBoard(data) {
         idMap.set(item.id, id);
         const copy = { ...item, id, groupId };
         if (isImage(copy)) {
-            copy.assetId = assetMap.get(item.assetId);
+            copy.assetId = assetMap.get(item.assetId) || item.assetId; // Already in long-term storage.
         }
         return copy;
     });
@@ -146,7 +147,7 @@ function loadSavedBoard() {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
-            setBoard(parseBoard(saved, JSON.parse(localStorage.getItem(ASSETS_STORAGE_KEY))));
+            setBoard(parseBoard(saved, readLegacyAssets(), true));
         }
     } catch (error) {
         items = []; // Storage is blocked or the saved data is damaged: start empty.
@@ -215,8 +216,9 @@ function drawTextItem(target, item, box) {
 }
 
 function drawShapeLabel(target, item, box) {
-    const lineHeight = item.fontSize * 1.5;
-    target.font = `${item.bold ? 700 : 400} ${item.fontSize}px ${FONTS[item.fontFamily]}`;
+    const fittedSize = parseFloat(elements.get(item.id).querySelector('.shape-text').style.fontSize);
+    const lineHeight = fittedSize * 1.5;
+    target.font = `${item.bold ? 700 : 400} ${fittedSize}px ${FONTS[item.fontFamily]}`;
     target.fillStyle = item.textColor;
     target.textBaseline = 'middle';
     target.textAlign = item.align;

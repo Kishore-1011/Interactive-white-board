@@ -60,6 +60,11 @@ const TOOL_KEYS = {
 const SHAPE_TEXT_DEFAULTS = {
     text: '', fontSize: 20, fontFamily: 'sans', bold: false, align: 'center', textColor: '#111827',
 };
+const ASSET_DB_NAME = 'interactive-white-board';
+const ASSET_STORE_NAME = 'assets';
+const UNDO_TOAST_MS = 7000;
+const MIN_LABEL_FONT = 10;
+const ELLIPSE_TEXT_HEIGHT = 0.72;
 const SHAPE_TEXT_PADDING = 6;
 const ELLIPSE_TEXT_INSET = 0.14;
 const NUDGE_SMALL = 1;
