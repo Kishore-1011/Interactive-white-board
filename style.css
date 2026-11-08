@@ -360,8 +360,8 @@ button {
     touch-action: none;
 }
 
-#drawing-layer,
-#text-layer {
+#item-layer,
+#selection-layer {
     position: absolute;
     top: 0;
     left: 0;
@@ -369,38 +369,174 @@ button {
     height: 100%;
 }
 
+#selection-layer {
+    pointer-events: none;
+}
+
 #white-board.drawing {
     cursor: crosshair;
 }
 
-#white-board.drawing .text-box {
+#white-board.drawing .item,
+#white-board.drawing .item * {
     pointer-events: none;
 }
 
-.text-box {
+.item {
     position: absolute;
+    transform-origin: center;
+}
+
+.item-drawing {
+    pointer-events: none;
+}
+
+.item-drawing svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    overflow: visible;
+}
+
+.ink {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.hit {
+    fill: none;
+    stroke: transparent;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: stroke;
+    cursor: move;
+}
+
+.text-box {
     width: max-content;
     max-width: 100%;
     padding: 5px;
-    border-radius: 3px;
     cursor: move;
+    overflow-wrap: anywhere;
     -webkit-user-select: none;
     user-select: none;
 }
 
 .text-box[contenteditable="true"] {
+    outline: 2px solid #4f46e5;
     cursor: text;
     -webkit-user-select: text;
     user-select: text;
 }
 
-.text-box:focus-visible {
-    outline: 2px solid #4f46e5;
-    outline-offset: 0;
+.item.locked .hit,
+.text-box.locked {
+    cursor: default;
 }
 
-.selected {
-    outline: 2px solid #4f46e5;
+#white-board.multi-selection .item.selected {
+    outline: 1px solid #4f46e5;
+}
+
+#selection-frame {
+    position: absolute;
+    outline: 1.5px solid #4f46e5;
+    transform-origin: center;
+}
+
+#selection-frame[data-mode="locked"] {
+    outline-style: dashed;
+    outline-color: #71717a;
+}
+
+.handle {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    margin: -5.5px 0 0 -5.5px;
+    border: 1.5px solid #4f46e5;
+    border-radius: 3px;
+    background: #ffffff;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.handle[data-handle="nw"] { top: 0; left: 0; cursor: nwse-resize; }
+.handle[data-handle="n"] { top: 0; left: 50%; cursor: ns-resize; }
+.handle[data-handle="ne"] { top: 0; left: 100%; cursor: nesw-resize; }
+.handle[data-handle="e"] { top: 50%; left: 100%; cursor: ew-resize; }
+.handle[data-handle="se"] { top: 100%; left: 100%; cursor: nwse-resize; }
+.handle[data-handle="s"] { top: 100%; left: 50%; cursor: ns-resize; }
+.handle[data-handle="sw"] { top: 100%; left: 0; cursor: nesw-resize; }
+.handle[data-handle="w"] { top: 50%; left: 0; cursor: ew-resize; }
+
+.handle[data-handle="rotate"] {
+    top: -26px;
+    left: 50%;
+    border-radius: 50%;
+    cursor: grab;
+}
+
+.handle-rotate::before {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1.5px;
+    height: 15px;
+    background: #4f46e5;
+    content: "";
+    transform: translateX(-50%);
+}
+
+/* Near the top edge the rotate handle would be cut off, so it moves below the frame. */
+#selection-frame[data-rotate-below="true"] [data-handle="rotate"] {
+    top: calc(100% + 26px);
+}
+
+#selection-frame[data-rotate-below="true"] .handle-rotate::before {
+    top: auto;
+    bottom: 100%;
+}
+
+#selection-frame[data-mode="locked"] .handle,
+#selection-frame[data-mode="text"] [data-handle="n"],
+#selection-frame[data-mode="text"] [data-handle="s"],
+#selection-frame[data-mode="uniform"] [data-handle="n"],
+#selection-frame[data-mode="uniform"] [data-handle="e"],
+#selection-frame[data-mode="uniform"] [data-handle="s"],
+#selection-frame[data-mode="uniform"] [data-handle="w"],
+#selection-frame[data-flat-x="true"] [data-handle="nw"],
+#selection-frame[data-flat-x="true"] [data-handle="ne"],
+#selection-frame[data-flat-x="true"] [data-handle="se"],
+#selection-frame[data-flat-x="true"] [data-handle="sw"],
+#selection-frame[data-flat-x="true"] [data-handle="e"],
+#selection-frame[data-flat-x="true"] [data-handle="w"],
+#selection-frame[data-flat-y="true"] [data-handle="nw"],
+#selection-frame[data-flat-y="true"] [data-handle="ne"],
+#selection-frame[data-flat-y="true"] [data-handle="se"],
+#selection-frame[data-flat-y="true"] [data-handle="sw"],
+#selection-frame[data-flat-y="true"] [data-handle="n"],
+#selection-frame[data-flat-y="true"] [data-handle="s"] {
+    display: none;
+}
+
+#marquee {
+    position: absolute;
+    border: 1px solid #4f46e5;
+    background: rgb(79 70 229 / 10%);
+}
+
+@media (pointer: coarse) {
+    .handle {
+        width: 18px;
+        height: 18px;
+        margin: -9px 0 0 -9px;
+        border-radius: 5px;
+    }
 }
 
 /* Floating options bar */

@@ -31,7 +31,15 @@
     <symbol id="i-redo" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></symbol>
     <symbol id="i-clear" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
-    <symbol id="i-front" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M4 10a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2"/><path d="M14 20a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2"/></symbol>
+    <symbol id="i-front" viewBox="0 0 24 24"><path d="M5 3h14"/><path d="M12 21V8"/><path d="m6 14 6-6 6 6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M5 21h14"/><path d="M12 3v13"/><path d="m6 10 6 6 6-6"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+    <symbol id="i-backward" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+    <symbol id="i-duplicate" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-group" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2" stroke-dasharray="3 3"/><rect x="6" y="6" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-ungroup" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
     <symbol id="i-open" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
@@ -103,28 +111,52 @@
         <div id="context-bar" class="context-bar" role="toolbar" aria-label="Options" hidden>
             <div class="context-group" data-show="text">
                 <button id="font-down" type="button" class="icon-btn icon-btn-small" aria-label="Decrease font size" data-tip="Smaller"><svg class="icon icon-small"><use href="#i-minus"/></svg></button>
-                <input type="number" id="font-size" class="number-input" min="10" max="50" step="1" value="20" aria-label="Font size in pixels">
+                <input type="number" id="font-size" class="number-input" min="8" max="200" step="1" value="20" aria-label="Font size in pixels">
                 <button id="font-up" type="button" class="icon-btn icon-btn-small" aria-label="Increase font size" data-tip="Larger"><svg class="icon icon-small"><use href="#i-plus"/></svg></button>
             </div>
-            <div class="context-group" data-show="text draw">
+            <div class="context-group" data-show="selection draw">
                 <span class="swatch-wrap" data-tip="Color"><input type="color" id="color-input" class="color-swatch" value="#000000" aria-label="Color"></span>
             </div>
-            <div class="context-group" data-show="draw">
+            <div class="context-group" data-show="stroke draw">
                 <label for="brush-size" class="context-label">Size</label>
                 <input type="range" id="brush-size" class="range-input" min="1" max="30" step="1" value="4">
                 <span id="brush-value" class="context-value">4</span>
             </div>
-            <div class="context-group" data-show="text">
-                <button id="front-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring to front" data-tip="Bring to front"><svg class="icon icon-small"><use href="#i-front"/></svg></button>
+            <div class="context-group" data-show="selection">
+                <button id="front-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring to front" data-tip="To front"><svg class="icon icon-small"><use href="#i-front"/></svg></button>
+                <button id="forward-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring forward" data-tip="Forward"><svg class="icon icon-small"><use href="#i-forward"/></svg></button>
+                <button id="backward-btn" type="button" class="icon-btn icon-btn-small" aria-label="Send backward" data-tip="Backward"><svg class="icon icon-small"><use href="#i-backward"/></svg></button>
+                <button id="back-btn" type="button" class="icon-btn icon-btn-small" aria-label="Send to back" data-tip="To back"><svg class="icon icon-small"><use href="#i-back"/></svg></button>
+            </div>
+            <div class="context-group" data-show="selection">
+                <button id="duplicate-btn" type="button" class="icon-btn icon-btn-small" aria-label="Duplicate" data-tip="Duplicate (Ctrl+D)"><svg class="icon icon-small"><use href="#i-duplicate"/></svg></button>
+                <button id="group-btn" type="button" class="icon-btn icon-btn-small" aria-label="Group" data-tip="Group (Ctrl+G)"><svg class="icon icon-small"><use id="group-icon" href="#i-group"/></svg></button>
                 <button id="delete-btn" type="button" class="icon-btn icon-btn-small icon-btn-danger" aria-label="Delete" data-tip="Delete (Del)"><svg class="icon icon-small"><use href="#i-trash"/></svg></button>
             </div>
-            <div class="context-group context-hint" data-show="text">Double-click to edit</div>
+            <div class="context-group" data-show="selection locked">
+                <button id="lock-btn" type="button" class="icon-btn icon-btn-small" aria-label="Lock" aria-pressed="false" data-tip="Lock"><svg class="icon icon-small"><use id="lock-icon" href="#i-lock"/></svg></button>
+            </div>
+            <div class="context-group context-hint" data-show="single-text">Double-click to edit</div>
+            <div class="context-group context-note" data-show="locked">Locked</div>
             <div class="context-group context-note" data-show="eraser">Drag across a stroke or shape to remove it</div>
         </div>
 
         <div id="white-board">
-            <canvas id="drawing-layer" aria-hidden="true"></canvas>
-            <div id="text-layer"></div>
+            <div id="item-layer"></div>
+            <div id="selection-layer">
+                <div id="selection-frame" hidden>
+                    <span class="handle" data-handle="nw"></span>
+                    <span class="handle" data-handle="n"></span>
+                    <span class="handle" data-handle="ne"></span>
+                    <span class="handle" data-handle="e"></span>
+                    <span class="handle" data-handle="se"></span>
+                    <span class="handle" data-handle="s"></span>
+                    <span class="handle" data-handle="sw"></span>
+                    <span class="handle" data-handle="w"></span>
+                    <span class="handle handle-rotate" data-handle="rotate"></span>
+                </div>
+                <div id="marquee" hidden></div>
+            </div>
         </div>
 
         <p id="toast" class="toast" role="status"></p>
