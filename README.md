@@ -35,13 +35,20 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Align and distribute:** line up a selection or even out its spacing, with groups treated as single pieces
 - **Optional grid:** show a grid that objects and shapes snap to
 - **Large canvas:** pan in any direction, zoom from 10% to 400%, and fit everything on screen in one click
-- **Export and open:** save the whole board as a PNG image, or as a JSON file you can open again later
+- **Multiple boards:** keep as many boards as you like and switch between them
+- **Templates:** start from a brainstorm, flowchart, Kanban board, retrospective or weekly plan
+- **Right-click menu and shortcuts:** quick actions wherever you click, and a key for every tool (press <kbd>?</kbd> to see them all)
+- **Export and open:** save the whole board as a PNG image or PDF, or as a JSON file you can open again later
 - **Mouse and touch:** works with a mouse, a stylus or a finger, with pinch to zoom on phones and tablets
 
 ## Keyboard shortcuts
 
 | Keys | Action |
 |---|---|
+| <kbd>V</kbd> <kbd>H</kbd> <kbd>P</kbd> <kbd>E</kbd> | Select, pan, pen, eraser |
+| <kbd>L</kbd> <kbd>A</kbd> <kbd>R</kbd> <kbd>O</kbd> | Line, arrow, rectangle, ellipse |
+| <kbd>T</kbd> <kbd>N</kbd> <kbd>I</kbd> | Add text, sticky note, image |
+| <kbd>?</kbd> | Show all shortcuts |
 | <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo |
 | <kbd>Ctrl</kbd> + <kbd>Y</kbd> or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Redo |
 | <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>X</kbd> / <kbd>V</kbd> | Copy, cut, paste |
@@ -89,6 +96,7 @@ Interactive-white-board/
 │   ├── board.css           # The board, objects, selection handles and guides
 │   ├── panels.css          # Floating options, align menu, zoom controls and messages
 │   ├── tooltips.css        # Tooltips
+│   ├── dialogs.css         # Right-click menu, dialogs and the empty board
 │   └── responsive.css      # Phone layout and reduced motion
 ├── js/
 │   ├── dom.js              # References to page elements
@@ -103,6 +111,11 @@ Interactive-white-board/
 │   ├── arrows.js           # Arrows that stay attached to objects
 │   ├── images.js           # Adding and storing pictures
 │   ├── palette.js          # Colours, fill, opacity, text style and pop-up menus
+│   ├── context-menu.js     # Right-click menu
+│   ├── boards.js           # Multiple saved boards
+│   ├── templates.js        # Starter templates
+│   ├── dialogs.js          # Help, the empty board and the phone toolbar
+│   ├── pdf.js              # PDF export
 │   ├── snapping.js         # Snapping, guides, grid, align and distribute
 │   ├── camera.js           # Panning, zooming and pinch
 │   ├── preferences.js      # Board name, theme and menus
