@@ -18,12 +18,13 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Light and dark themes:** follows your system setting until you choose one, and the page stays white so it always matches your export
 - **Named boards:** give the board a name and exported files use it
 - **Drawing tools:** pen, line, arrow, rectangle and ellipse, with a colour palette, recent colours and brush size
-- **Arrows that stay attached:** draw an arrow between two objects and it follows them when they move
+- **Arrows that stay attached:** draw an arrow between two objects and it follows them when they move, or drag either end onto something else
 - **Sticky notes:** coloured notes you can resize and write on
-- **Images:** drag and drop pictures onto the board, or add them with the Image button
+- **Images:** drag and drop pictures onto the board, paste them with <kbd>Ctrl</kbd> + <kbd>V</kbd>, or add them with the Image button
 - **Fill and opacity:** fill shapes and notes with colour, and fade any object
 - **Eraser:** removes any stroke or shape it touches
-- **Text:** double-click to edit, choose a font, bold and alignment, drag a corner to scale it, or drag a side to set where it wraps
+- **Text inside shapes:** double-click any rectangle or ellipse to type in it, and the text moves with the shape
+- **Text:** new text is ready to type straight away; double-click to edit it later, choose a font, bold and alignment, drag a corner to scale it, or drag a side to set where it wraps
 - **Direct editing:** click anything to move, resize or rotate it with handles
 - **Multiple selection:** drag across the board or Shift-click to work on several objects at once
 - **Groups and locks:** group objects so they move together, and lock anything you don't want disturbed
@@ -49,6 +50,7 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 | <kbd>L</kbd> <kbd>A</kbd> <kbd>R</kbd> <kbd>O</kbd> | Line, arrow, rectangle, ellipse |
 | <kbd>T</kbd> <kbd>N</kbd> <kbd>I</kbd> | Add text, sticky note, image |
 | <kbd>?</kbd> | Show all shortcuts |
+| Arrow keys | Nudge the selection (hold <kbd>Shift</kbd> to move further) |
 | <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo |
 | <kbd>Ctrl</kbd> + <kbd>Y</kbd> or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Redo |
 | <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>X</kbd> / <kbd>V</kbd> | Copy, cut, paste |
