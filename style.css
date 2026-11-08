@@ -369,6 +369,10 @@ button {
     height: 100%;
 }
 
+#item-layer {
+    transform-origin: 0 0;
+}
+
 #selection-layer {
     pointer-events: none;
 }
@@ -378,8 +382,19 @@ button {
 }
 
 #white-board.drawing .item,
-#white-board.drawing .item * {
+#white-board.drawing .item *,
+#white-board.space-pan .item,
+#white-board.space-pan .item * {
     pointer-events: none;
+}
+
+#white-board.hand-tool,
+#white-board.space-pan {
+    cursor: grab;
+}
+
+#white-board.is-panning {
+    cursor: grabbing;
 }
 
 .item {
@@ -418,7 +433,6 @@ button {
 
 .text-box {
     width: max-content;
-    max-width: 100%;
     padding: 5px;
     cursor: move;
     overflow-wrap: anywhere;
@@ -427,7 +441,7 @@ button {
 }
 
 .text-box[contenteditable="true"] {
-    outline: 2px solid #4f46e5;
+    outline: calc(2px / var(--zoom, 1)) solid #4f46e5;
     cursor: text;
     -webkit-user-select: text;
     user-select: text;
@@ -439,7 +453,7 @@ button {
 }
 
 #white-board.multi-selection .item.selected {
-    outline: 1px solid #4f46e5;
+    outline: calc(1px / var(--zoom, 1)) solid #4f46e5;
 }
 
 #selection-frame {
@@ -637,6 +651,37 @@ button {
     accent-color: var(--accent);
 }
 
+.zoom-controls {
+    position: absolute;
+    right: 32px;
+    bottom: 32px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 40px;
+    padding: 0 4px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--chrome);
+    box-shadow: var(--shadow);
+}
+
+.zoom-label {
+    min-width: 50px;
+    height: 32px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.zoom-label:hover {
+    background: var(--hover);
+}
+
 .toast {
     position: absolute;
     bottom: 32px;
@@ -695,6 +740,17 @@ button {
         top: 50%;
         left: calc(100% + 10px);
         transform: translateY(-50%);
+    }
+
+    .zoom-controls [data-tip]::after {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+
+    .zoom-controls [data-tip]:last-child::after {
+        right: 0;
+        left: auto;
+        transform: none;
     }
 }
 
@@ -764,6 +820,15 @@ button {
     .context-bar {
         top: 6px;
         overflow-x: auto;
+    }
+
+    .zoom-controls {
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .toast {
+        bottom: 68px;
     }
 
     .context-hint {

@@ -49,6 +49,8 @@
     <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
     <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-pan" viewBox="0 0 24 24"><path d="m5 9-3 3 3 3"/><path d="m9 5 3-3 3 3"/><path d="m15 19-3 3-3-3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
 </svg>
 
 <header class="topbar">
@@ -96,6 +98,7 @@
 <div class="workspace">
     <nav class="tool-rail" aria-label="Tools">
         <button type="button" class="icon-btn tool-btn" data-tool="select" aria-label="Select" data-tip="Select and move"><svg class="icon"><use href="#i-select"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="hand" aria-label="Pan" data-tip="Pan (hold Space)"><svg class="icon"><use href="#i-pan"/></svg></button>
         <button type="button" class="icon-btn tool-btn" data-tool="pen" aria-label="Pen" data-tip="Pen"><svg class="icon"><use href="#i-pen"/></svg></button>
         <button type="button" class="icon-btn tool-btn" data-tool="eraser" aria-label="Eraser" data-tip="Eraser"><svg class="icon"><use href="#i-eraser"/></svg></button>
         <span class="rail-divider" aria-hidden="true"></span>
@@ -157,6 +160,13 @@
                 </div>
                 <div id="marquee" hidden></div>
             </div>
+        </div>
+
+        <div class="zoom-controls" role="group" aria-label="Zoom">
+            <button id="zoom-out" type="button" class="icon-btn icon-btn-small" aria-label="Zoom out" data-tip="Zoom out (Ctrl+-)"><svg class="icon icon-small"><use href="#i-minus"/></svg></button>
+            <button id="zoom-reset" type="button" class="zoom-label" aria-label="Reset zoom to 100%" data-tip="Reset to 100% (Ctrl+0)">100%</button>
+            <button id="zoom-in" type="button" class="icon-btn icon-btn-small" aria-label="Zoom in" data-tip="Zoom in (Ctrl+=)"><svg class="icon icon-small"><use href="#i-plus"/></svg></button>
+            <button id="fit-btn" type="button" class="icon-btn icon-btn-small" aria-label="Fit to screen" data-tip="Fit to screen (Shift+1)"><svg class="icon icon-small"><use href="#i-fit"/></svg></button>
         </div>
 
         <p id="toast" class="toast" role="status"></p>

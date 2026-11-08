@@ -24,6 +24,9 @@ const brushValue = document.getElementById('brush-value');
 const themeButton = document.getElementById('theme-btn');
 const exportToggle = document.getElementById('export-toggle');
 const exportMenu = document.getElementById('export-menu');
+const zoomInButton = document.getElementById('zoom-in');
+const zoomOutButton = document.getElementById('zoom-out');
+const zoomResetButton = document.getElementById('zoom-reset');
 const selectionButtons = ['front-btn', 'forward-btn', 'backward-btn', 'back-btn', 'duplicate-btn', 'delete-btn']
     .map((id) => document.getElementById(id));
 
@@ -31,6 +34,20 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const STORAGE_KEY = 'interactive-white-board';
 const NAME_STORAGE_KEY = 'interactive-white-board:name';
 const THEME_STORAGE_KEY = 'interactive-white-board:theme';
+const VIEW_STORAGE_KEY = 'interactive-white-board:view';
+const VIEW_SAVE_MS = 200;
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 4;
+const ZOOM_STEPS = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
+const WHEEL_ZOOM_SPEED = 0.002;
+const WHEEL_LINE_HEIGHT = 16;
+const FIT_PADDING = 48;
+const DOT_SPACING = 22;
+const MIN_DOT_SPACING = 14;
+const MAX_DOT_SPACING = 44;
+const EXPORT_PADDING = 32;
+const EXPORT_MAX_SIZE = 8000;
+const MAX_TEXT_WIDTH = 1200;
 const DEFAULT_BOARD_NAME = 'Untitled board';
 const TOAST_MS = 3500;
 const MAX_UNDO_STEPS = 100;
@@ -70,11 +87,18 @@ let tool = 'select';
 let nextId = 1;
 let cascade = 0;
 
+// Where the screen is looking: screen = board position * zoom + x/y offset.
+const camera = { x: 0, y: 0, zoom: 1 };
+let viewSaveTimer = null;
+
 // What the pointer is doing right now, if anything.
 let gesture = null;
 let activeDrawing = null;
 let eraser = null;
 let lastTap = null;
+let spaceHeld = false;
+let pinch = null;
+const touches = new Map();
 
 let clipboard = [];
 let pasteCount = 0;
@@ -180,28 +204,28 @@ function boundsOfItems(list) {
     return pointsBox(list.flatMap(itemCorners));
 }
 
-function boardPoint(e) {
+// A pointer position in screen pixels, measured from the top-left of the visible board.
+function screenPoint(e) {
     const rect = board.getBoundingClientRect();
-    return { x: round(e.clientX - rect.left), y: round(e.clientY - rect.top) };
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
-function boardSize() {
+function screenToBoard(point) {
+    return { x: (point.x - camera.x) / camera.zoom, y: (point.y - camera.y) / camera.zoom };
+}
+
+function boardToScreen(point) {
+    return { x: point.x * camera.zoom + camera.x, y: point.y * camera.zoom + camera.y };
+}
+
+function boardPoint(e) {
+    const point = screenToBoard(screenPoint(e));
+    return { x: round(point.x), y: round(point.y) };
+}
+
+function viewportSize() {
     const rect = board.getBoundingClientRect();
     return { w: rect.width, h: rect.height };
-}
-
-// Limit a move so the bounds stay on the board. Anything already off the board may still move back.
-function clampMove(bounds, dx, dy) {
-    const size = boardSize();
-    const limit = (delta, start, length, total) => {
-        const min = Math.min(0, -start);
-        const max = Math.max(0, total - start - length);
-        return Math.min(Math.max(delta, min), max);
-    };
-    return {
-        dx: limit(dx, bounds.x, bounds.w, size.w),
-        dy: limit(dy, bounds.y, bounds.h, size.h),
-    };
 }
 
 function moveItem(item, start, dx, dy) {
@@ -292,7 +316,7 @@ function distanceToSegment(point, a, b) {
 function isHit(item, point) {
     const local = rotatePoint(point, boxCentre(pointsBox(item.points)), -item.rotation);
     const path = outline(item);
-    const reach = item.strokeWidth / 2 + ERASER_RADIUS;
+    const reach = item.strokeWidth / 2 + ERASER_RADIUS / camera.zoom;
     if (path.length === 1) {
         return distance(local, path[0]) <= reach;
     }
@@ -301,7 +325,7 @@ function isHit(item, point) {
 
 // Sample along the pointer's path so a fast swipe doesn't skip over thin strokes.
 function eraseBetween(from, to) {
-    const steps = Math.max(1, Math.ceil(distance(from, to) / ERASER_STEP));
+    const steps = Math.max(1, Math.ceil((distance(from, to) * camera.zoom) / ERASER_STEP));
     const probes = Array.from({ length: steps + 1 }, (_, i) => ({
         x: from.x + ((to.x - from.x) * i) / steps,
         y: from.y + ((to.y - from.y) * i) / steps,
@@ -344,7 +368,7 @@ function continueDrawing(e) {
     }
     if (activeDrawing.type === 'pen') {
         const last = activeDrawing.points[activeDrawing.points.length - 1];
-        if (distance(last, point) >= 1) {
+        if (distance(last, point) * camera.zoom >= 1) {
             activeDrawing.points.push(point);
         }
     } else {
@@ -400,6 +424,7 @@ function renderItem(item) {
         element.style.fontSize = item.fontSize + 'px';
         element.style.color = item.color;
         element.style.width = item.width === null ? '' : item.width + 'px';
+        element.style.maxWidth = item.width === null ? MAX_TEXT_WIDTH + 'px' : '';
         element.style.left = item.x + 'px';
         element.style.top = item.y + 'px';
     } else {
@@ -411,7 +436,7 @@ function renderItem(item) {
         ink.setAttribute('stroke', item.color);
         ink.setAttribute('stroke-width', item.strokeWidth);
         hit.setAttribute('d', data);
-        hit.setAttribute('stroke-width', item.strokeWidth + HIT_PADDING);
+        hit.setAttribute('stroke-width', item.strokeWidth + HIT_PADDING / camera.zoom);
         element.style.left = box.x + 'px';
         element.style.top = box.y + 'px';
         element.style.width = box.w + 'px';
@@ -473,11 +498,13 @@ function updateFrame() {
     if (!frame) {
         return;
     }
+    // The frame is drawn in screen space so the handles stay the same size at any zoom.
+    const corner = boardToScreen(frame);
     const style = selectionFrameElement.style;
-    style.left = frame.x + 'px';
-    style.top = frame.y + 'px';
-    style.width = frame.w + 'px';
-    style.height = frame.h + 'px';
+    style.left = corner.x + 'px';
+    style.top = corner.y + 'px';
+    style.width = frame.w * camera.zoom + 'px';
+    style.height = frame.h * camera.zoom + 'px';
     style.transform = frame.rotation ? `rotate(${frame.rotation}deg)` : '';
 
     const dataset = selectionFrameElement.dataset;
@@ -485,7 +512,7 @@ function updateFrame() {
     dataset.mode = mode;
     dataset.flatX = String(mode === 'free' && frame.w < FLAT_SIZE);
     dataset.flatY = String(mode === 'free' && frame.h < FLAT_SIZE);
-    dataset.rotateBelow = String(frame.y < ROTATE_HANDLE_ROOM);
+    dataset.rotateBelow = String(corner.y < ROTATE_HANDLE_ROOM);
 }
 
 function updateSelectionStyles() {
@@ -645,6 +672,7 @@ function setTool(name) {
         select([]);
     }
     board.classList.toggle('drawing', name !== 'select');
+    board.classList.toggle('hand-tool', name === 'hand');
     toolButtons.forEach((button) => {
         const isActive = button.dataset.tool === name;
         button.classList.toggle('active', isActive);
@@ -656,12 +684,13 @@ function setTool(name) {
 function addTextBox() {
     setTool('select');
     const offset = CASCADE_START + (cascade++ % CASCADE_LENGTH) * CASCADE_STEP;
+    const position = screenToBoard({ x: offset, y: offset }); // Always lands where you're looking.
     const item = {
         id: newId(),
         type: 'text',
         text: 'New Text',
-        x: offset,
-        y: offset,
+        x: round(position.x),
+        y: round(position.y),
         width: null,
         fontSize: Number(fontSizeInput.value),
         color: colorInput.value,
@@ -884,7 +913,6 @@ function startMove(e, element, collapseTo) {
         startY: e.clientY,
         element,
         collapseTo,
-        bounds: boundsOfItems(selected),
         starts: selected.map((item) => ({ item, start: clone(item) })),
         moved: false,
     };
@@ -897,7 +925,8 @@ function continueMove(e) {
         return;
     }
     gesture.moved = true;
-    const { dx, dy } = clampMove(gesture.bounds, rawX, rawY);
+    const dx = rawX / camera.zoom;
+    const dy = rawY / camera.zoom;
     gesture.starts.forEach(({ item, start }) => {
         moveItem(item, start, dx, dy);
         renderItem(item);
@@ -945,10 +974,7 @@ function resizeItem(entry, itemCentre, sx, sy) {
 
 function continueResize(e) {
     const { hx, hy, frame, centre } = gesture;
-    const size = boardSize();
-    const raw = boardPoint(e);
-    const pointer = { x: Math.min(Math.max(raw.x, 0), size.w), y: Math.min(Math.max(raw.y, 0), size.h) };
-    const local = rotatePoint(pointer, centre, -frame.rotation);
+    const local = rotatePoint(boardPoint(e), centre, -frame.rotation);
     const anchorX = (-hx * frame.w) / 2;
     const anchorY = (-hy * frame.h) / 2;
     const localX = local.x - centre.x;
@@ -1053,17 +1079,18 @@ function boxesTouch(a, b) {
 
 function continueMarquee(e) {
     const point = boardPoint(e);
-    if (!gesture.moved && distance(gesture.origin, point) < DRAG_THRESHOLD) {
+    if (!gesture.moved && distance(gesture.origin, point) * camera.zoom < DRAG_THRESHOLD) {
         return;
     }
     gesture.moved = true;
     const box = marqueeBox(point);
+    const corner = boardToScreen(box);
     gesture.box = box;
     marqueeElement.hidden = false;
-    marqueeElement.style.left = box.x + 'px';
-    marqueeElement.style.top = box.y + 'px';
-    marqueeElement.style.width = box.w + 'px';
-    marqueeElement.style.height = box.h + 'px';
+    marqueeElement.style.left = corner.x + 'px';
+    marqueeElement.style.top = corner.y + 'px';
+    marqueeElement.style.width = box.w * camera.zoom + 'px';
+    marqueeElement.style.height = box.h * camera.zoom + 'px';
 }
 
 function finishMarquee() {
@@ -1094,6 +1121,165 @@ function finishTransform(e) {
             registerTap(finished.element, e.timeStamp);
         }
     }
+}
+
+// --- Panning and zooming ---
+
+function clampZoom(zoom) {
+    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
+}
+
+function updateDots() {
+    let spacing = DOT_SPACING * camera.zoom;
+    while (spacing < MIN_DOT_SPACING) {
+        spacing *= 2;
+    }
+    while (spacing > MAX_DOT_SPACING) {
+        spacing /= 2;
+    }
+    board.style.backgroundSize = `${spacing}px ${spacing}px`;
+    board.style.backgroundPosition = `${camera.x}px ${camera.y}px`;
+}
+
+function drawCamera(zoomChanged) {
+    itemLayer.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`;
+    board.style.setProperty('--zoom', camera.zoom);
+    updateDots();
+    zoomResetButton.textContent = `${Math.round(camera.zoom * 100)}%`;
+    zoomInButton.disabled = camera.zoom >= MAX_ZOOM;
+    zoomOutButton.disabled = camera.zoom <= MIN_ZOOM;
+    if (zoomChanged) {
+        render(); // Click areas stay a comfortable size on screen at every zoom.
+    } else {
+        updateFrame();
+    }
+}
+
+function queueViewSave() {
+    clearTimeout(viewSaveTimer);
+    viewSaveTimer = setTimeout(() => {
+        try {
+            localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(camera));
+        } catch (error) {
+            // The view just won't be remembered next time.
+        }
+    }, VIEW_SAVE_MS);
+}
+
+function setCamera(x, y, zoom) {
+    const zoomChanged = zoom !== camera.zoom;
+    camera.x = x;
+    camera.y = y;
+    camera.zoom = zoom;
+    drawCamera(zoomChanged);
+    queueViewSave();
+}
+
+function loadView() {
+    try {
+        const view = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY));
+        if (view && Number.isFinite(view.x) && Number.isFinite(view.y) && Number.isFinite(view.zoom)) {
+            camera.x = view.x;
+            camera.y = view.y;
+            camera.zoom = clampZoom(view.zoom);
+        }
+    } catch (error) {
+        // No usable view saved: start at the default.
+    }
+}
+
+// Zoom while keeping the board position under this screen point exactly where it is.
+function zoomAt(point, zoom) {
+    const anchor = screenToBoard(point);
+    const nextZoom = clampZoom(zoom);
+    setCamera(point.x - anchor.x * nextZoom, point.y - anchor.y * nextZoom, nextZoom);
+}
+
+function viewportCentre() {
+    const size = viewportSize();
+    return { x: size.w / 2, y: size.h / 2 };
+}
+
+function stepZoom(direction) {
+    const next = direction > 0
+        ? ZOOM_STEPS.find((step) => step > camera.zoom + 0.001)
+        : [...ZOOM_STEPS].reverse().find((step) => step < camera.zoom - 0.001);
+    if (next !== undefined) {
+        zoomAt(viewportCentre(), next);
+    }
+}
+
+function resetZoom() {
+    zoomAt(viewportCentre(), 1);
+}
+
+// Show the whole board, never enlarging it past 100%.
+function fitToScreen() {
+    if (items.length === 0) {
+        setCamera(0, 0, 1);
+        return;
+    }
+    const bounds = boundsOfItems(items);
+    const size = viewportSize();
+    const room = FIT_PADDING * 2;
+    const zoom = clampZoom(Math.min(1, (size.w - room) / Math.max(bounds.w, 1), (size.h - room) / Math.max(bounds.h, 1)));
+    const centre = boxCentre(bounds);
+    setCamera(size.w / 2 - centre.x * zoom, size.h / 2 - centre.y * zoom, zoom);
+}
+
+function startPan(e) {
+    gesture = { kind: 'pan', startX: e.clientX, startY: e.clientY, cameraX: camera.x, cameraY: camera.y };
+    board.classList.add('is-panning');
+}
+
+function continuePan(e) {
+    setCamera(gesture.cameraX + e.clientX - gesture.startX, gesture.cameraY + e.clientY - gesture.startY, camera.zoom);
+}
+
+function finishPan() {
+    gesture = null;
+    board.classList.remove('is-panning');
+}
+
+function setSpaceHeld(isHeld) {
+    spaceHeld = isHeld;
+    board.classList.toggle('space-pan', isHeld);
+}
+
+// A second finger means the first wasn't drawing or dragging after all, so that's undone.
+function cancelGesture() {
+    const changedBoard = Boolean(activeDrawing || eraser
+        || (gesture && ['move', 'resize', 'rotate'].includes(gesture.kind)));
+    if (gesture && gesture.kind === 'pan') {
+        finishPan();
+    }
+    marqueeElement.hidden = true;
+    gesture = null;
+    activeDrawing = null;
+    eraser = null;
+    if (changedBoard) {
+        restore(undoIndex);
+    }
+}
+
+function touchMidpoint() {
+    const [first, second] = [...touches.values()];
+    return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+}
+
+function touchSpread() {
+    const [first, second] = [...touches.values()];
+    return Math.max(distance(first, second), 1);
+}
+
+function startPinch() {
+    pinch = { spread: touchSpread(), zoom: camera.zoom, anchor: screenToBoard(touchMidpoint()) };
+}
+
+function continuePinch() {
+    const zoom = clampZoom((pinch.zoom * touchSpread()) / pinch.spread);
+    const middle = touchMidpoint();
+    setCamera(middle.x - pinch.anchor.x * zoom, middle.y - pinch.anchor.y * zoom, zoom);
 }
 
 // --- Board name, theme and menus ---
@@ -1240,26 +1426,6 @@ function loadSavedBoard() {
     }
 }
 
-// After a window resize, bring back anything that would now be off the board.
-function fitItemsToBoard() {
-    const size = boardSize();
-    const shift = (start, length, total) => {
-        if (start < 0) {
-            return -start;
-        }
-        const overflow = start + length - total;
-        return overflow > 0 ? Math.max(-overflow, -start) : 0;
-    };
-    items.forEach((item) => {
-        const bounds = boundsOfItems([item]);
-        const dx = shift(bounds.x, bounds.w, size.w);
-        const dy = shift(bounds.y, bounds.h, size.h);
-        if (dx || dy) {
-            moveItem(item, clone(item), dx, dy);
-        }
-    });
-}
-
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -1313,16 +1479,35 @@ function drawStrokeItem(target, item) {
     target.stroke(new Path2D(pathData(item)));
 }
 
+// The area to export: everything on the board with a margin, wherever the view happens to be.
+function exportArea() {
+    if (items.length === 0) {
+        const size = viewportSize();
+        return { x: 0, y: 0, w: size.w, h: size.h };
+    }
+    const bounds = boundsOfItems(items);
+    const thickest = Math.max(0, ...items.filter((item) => !isText(item)).map((item) => item.strokeWidth));
+    const margin = EXPORT_PADDING + thickest / 2;
+    return {
+        x: bounds.x - margin,
+        y: bounds.y - margin,
+        w: bounds.w + margin * 2,
+        h: bounds.h + margin * 2,
+    };
+}
+
 function exportPng() {
-    const size = boardSize();
+    const area = exportArea();
+    const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_SIZE / Math.max(area.w, area.h));
     const output = document.createElement('canvas');
-    output.width = Math.round(size.w * EXPORT_SCALE);
-    output.height = Math.round(size.h * EXPORT_SCALE);
+    output.width = Math.round(area.w * scale);
+    output.height = Math.round(area.h * scale);
 
     const target = output.getContext('2d');
-    target.scale(EXPORT_SCALE, EXPORT_SCALE);
+    target.scale(scale, scale);
+    target.translate(-area.x, -area.y);
     target.fillStyle = '#ffffff';
-    target.fillRect(0, 0, size.w, size.h);
+    target.fillRect(area.x, area.y, area.w, area.h);
 
     items.forEach((item) => {
         const box = itemBox(item);
@@ -1353,6 +1538,7 @@ async function importJson() {
         setBoard(data);
         commit();
         select([]);
+        fitToScreen();
         if (typeof data.name === 'string' && data.name.trim()) {
             setBoardName(data.name.trim());
         }
@@ -1365,12 +1551,24 @@ async function importJson() {
 // --- Input ---
 
 board.addEventListener('pointerdown', function (e) {
-    if (!e.isPrimary || e.button !== 0) {
+    if (e.pointerType === 'touch') {
+        touches.set(e.pointerId, screenPoint(e));
+        if (touches.size === 2) {
+            cancelGesture();
+            startPinch();
+            return;
+        }
+    }
+    if (pinch || !e.isPrimary || (e.button !== 0 && e.button !== 1)) {
         return;
     }
     const element = e.target.closest('.item');
     if (editingId && (!element || element.dataset.id !== editingId)) {
         finishEditing();
+    }
+    if (e.button === 1 || spaceHeld || tool === 'hand') {
+        startPan(e);
+        return;
     }
     if (tool !== 'select') {
         startDrawing(e);
@@ -1416,11 +1614,42 @@ board.addEventListener('pointerdown', function (e) {
     }
 });
 
+// Stops the browser's autoscroll so the middle button can pan.
+board.addEventListener('mousedown', function (e) {
+    if (e.button === 1) {
+        e.preventDefault();
+    }
+});
+
+board.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    if (isInteracting() || pinch) {
+        return;
+    }
+    const unit = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_LINE_HEIGHT : 1;
+    if (e.ctrlKey || e.metaKey) {
+        zoomAt(screenPoint(e), camera.zoom * Math.exp(-e.deltaY * unit * WHEEL_ZOOM_SPEED));
+        return;
+    }
+    const sideways = e.shiftKey && e.deltaX === 0;
+    const dx = (sideways ? e.deltaY : e.deltaX) * unit;
+    const dy = (sideways ? 0 : e.deltaY) * unit;
+    setCamera(camera.x - dx, camera.y - dy, camera.zoom);
+}, { passive: false });
+
 document.addEventListener('pointermove', function (e) {
-    if (activeDrawing || eraser) {
+    if (touches.has(e.pointerId)) {
+        touches.set(e.pointerId, screenPoint(e));
+    }
+    if (pinch) {
+        if (touches.size >= 2) {
+            continuePinch();
+        }
+    } else if (activeDrawing || eraser) {
         continueDrawing(e);
     } else if (gesture) {
         const handlers = {
+            pan: continuePan,
             move: continueMove,
             resize: continueResize,
             rotate: continueRotate,
@@ -1431,8 +1660,17 @@ document.addEventListener('pointermove', function (e) {
 });
 
 function endPointer(e) {
+    touches.delete(e.pointerId);
+    if (pinch) {
+        if (touches.size === 0) {
+            pinch = null; // Wait for every finger to lift so the last one can't start a drag.
+        }
+        return;
+    }
     if (activeDrawing || eraser) {
         finishDrawing();
+    } else if (gesture && gesture.kind === 'pan') {
+        finishPan();
     } else if (gesture && gesture.kind === 'marquee') {
         finishMarquee();
     } else if (gesture) {
@@ -1474,6 +1712,22 @@ document.addEventListener('keydown', function (e) {
         return; // Typing in a field must never trigger board shortcuts.
     }
 
+    if (e.code === 'Space') {
+        e.preventDefault(); // Otherwise it would also press whichever button has focus.
+        if (document.activeElement.matches('button')) {
+            document.activeElement.blur();
+        }
+        if (!e.repeat) {
+            setSpaceHeld(true);
+        }
+        return;
+    }
+    if (e.shiftKey && e.code === 'Digit1') {
+        e.preventDefault();
+        fitToScreen();
+        return;
+    }
+
     const key = e.key.toLowerCase();
     const command = e.ctrlKey || e.metaKey;
     const shortcuts = {
@@ -1487,6 +1741,10 @@ document.addEventListener('keydown', function (e) {
         g: () => (e.shiftKey ? ungroup() : toggleGroup()),
         ']': bringToFront,
         '[': sendToBack,
+        '=': () => stepZoom(1),
+        '+': () => stepZoom(1),
+        '-': () => stepZoom(-1),
+        0: resetZoom,
     };
 
     if (command && shortcuts[key]) {
@@ -1499,6 +1757,14 @@ document.addEventListener('keydown', function (e) {
         select([]);
     }
 });
+
+document.addEventListener('keyup', function (e) {
+    if (e.code === 'Space') {
+        setSpaceHeld(false);
+    }
+});
+
+window.addEventListener('blur', () => setSpaceHeld(false));
 
 // `input` previews the change live; `change` fires once at the end and records one undo step.
 fontSizeInput.addEventListener('input', function () {
@@ -1554,13 +1820,6 @@ document.addEventListener('pointerdown', function (e) {
     }
 });
 
-new ResizeObserver(function () {
-    if (!isInteracting() && !editingId) {
-        fitItemsToBoard();
-        render();
-    }
-}).observe(board);
-
 toolButtons.forEach((button) => {
     button.addEventListener('click', () => setTool(button.dataset.tool));
 });
@@ -1568,6 +1827,10 @@ toolButtons.forEach((button) => {
 document.getElementById('add-text-btn').addEventListener('click', addTextBox);
 document.getElementById('font-down').addEventListener('click', () => stepFontSize(-1));
 document.getElementById('font-up').addEventListener('click', () => stepFontSize(1));
+zoomInButton.addEventListener('click', () => stepZoom(1));
+zoomOutButton.addEventListener('click', () => stepZoom(-1));
+zoomResetButton.addEventListener('click', resetZoom);
+document.getElementById('fit-btn').addEventListener('click', fitToScreen);
 themeButton.addEventListener('click', toggleTheme);
 undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
@@ -1590,9 +1853,9 @@ importInput.addEventListener('change', importJson);
 loadSavedBoard();
 loadBoardName();
 updateThemeButton();
+loadView();
 render();
-fitItemsToBoard();
-render();
+drawCamera(false);
 undoStack = [snapshot()];
 setTool('select');
 updateButtons();
