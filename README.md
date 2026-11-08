@@ -17,9 +17,13 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Editor layout:** a tool rail on the left and a floating bar that shows only the options for what you've selected
 - **Light and dark themes:** follows your system setting until you choose one, and the page stays white so it always matches your export
 - **Named boards:** give the board a name and exported files use it
-- **Drawing tools:** pen, line, rectangle and ellipse, with a colour picker and brush size
+- **Drawing tools:** pen, line, arrow, rectangle and ellipse, with a colour palette, recent colours and brush size
+- **Arrows that stay attached:** draw an arrow between two objects and it follows them when they move
+- **Sticky notes:** coloured notes you can resize and write on
+- **Images:** drag and drop pictures onto the board, or add them with the Image button
+- **Fill and opacity:** fill shapes and notes with colour, and fade any object
 - **Eraser:** removes any stroke or shape it touches
-- **Text:** double-click to edit, drag a corner to scale it, or drag a side to set where it wraps
+- **Text:** double-click to edit, choose a font, bold and alignment, drag a corner to scale it, or drag a side to set where it wraps
 - **Direct editing:** click anything to move, resize or rotate it with handles
 - **Multiple selection:** drag across the board or Shift-click to work on several objects at once
 - **Groups and locks:** group objects so they move together, and lock anything you don't want disturbed
@@ -96,6 +100,9 @@ Interactive-white-board/
 │   ├── selection.js        # Selecting, layers, groups, locks and copy/paste
 │   ├── text-editing.js     # Editing text in place
 │   ├── transforms.js       # Moving, resizing, rotating and rubber-band selection
+│   ├── arrows.js           # Arrows that stay attached to objects
+│   ├── images.js           # Adding and storing pictures
+│   ├── palette.js          # Colours, fill, opacity, text style and pop-up menus
 │   ├── snapping.js         # Snapping, guides, grid, align and distribute
 │   ├── camera.js           # Panning, zooming and pinch
 │   ├── preferences.js      # Board name, theme and menus
