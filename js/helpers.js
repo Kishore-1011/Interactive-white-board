@@ -24,6 +24,15 @@ function isDrawing(item) {
     return DRAWING_TYPES.includes(item.type);
 }
 
+function canHoldText(item) {
+    return FILLABLE_TYPES.includes(item.type);
+}
+
+// Anything whose text the font controls apply to.
+function isStyledText(item) {
+    return isText(item) || (canHoldText(item) && Boolean(item.text));
+}
+
 function isFillable(item) {
     return Boolean(item.note) || FILLABLE_TYPES.includes(item.type);
 }

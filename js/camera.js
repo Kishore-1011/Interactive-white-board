@@ -124,12 +124,13 @@ function setSpaceHeld(isHeld) {
 // A second finger means the first wasn't drawing or dragging after all, so that's undone.
 function cancelGesture() {
     const changedBoard = Boolean(activeDrawing || eraser
-        || (gesture && ['move', 'resize', 'rotate'].includes(gesture.kind)));
+        || (gesture && ['move', 'resize', 'rotate', 'arrow-end'].includes(gesture.kind)));
     if (gesture && gesture.kind === 'pan') {
         finishPan();
     }
     marqueeElement.hidden = true;
     drawGuides([]);
+    setAttachHighlight(null);
     gesture = null;
     activeDrawing = null;
     eraser = null;

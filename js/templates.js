@@ -12,11 +12,9 @@ function templateBuilder() {
         heading: (x, y, width, text, size = 26) => ({
             ...base(), type: 'text', text, x, y, width, fontSize: size, color: '#111827', bold: true, align: 'center',
         }),
-        label: (x, y, width, text) => ({
-            ...base(), type: 'text', text, x, y, width, fontSize: 18, color: '#111827', align: 'center',
-        }),
-        box: (x, y, w, h, fill = null, type = 'rectangle') => ({
-            ...base(), type, points: [{ x, y }, { x: x + w, y: y + h }], color: blockColour, strokeWidth: 3, fill,
+        box: (x, y, w, h, fill = null, type = 'rectangle', text = '') => ({
+            ...base(), type, points: [{ x, y }, { x: x + w, y: y + h }], color: blockColour, strokeWidth: 3, fill, text,
+            fontSize: 18,
         }),
         arrow: (from, to) => ({
             ...base(), type: 'arrow', points: [{ x: 0, y: 0 }, { x: 1, y: 1 }], color: blockColour, strokeWidth: 3,
@@ -47,13 +45,12 @@ const TEMPLATES = [
         description: 'One big idea with thoughts around it',
         build() {
             const t = templateBuilder();
-            const centre = t.box(330, 240, 260, 150, '#e0e7ff', 'ellipse');
-            const title = t.label(330, 300, 260, 'Main idea');
+            const centre = t.box(330, 240, 260, 150, '#e0e7ff', 'ellipse', 'Main idea');
             const notes = [
                 t.note(0, 0, 'Idea'), t.note(375, -60, 'Idea', '#bfdbfe'), t.note(750, 0, 'Idea', '#bbf7d0'),
                 t.note(0, 420, 'Idea', '#fecaca'), t.note(375, 540, 'Idea', '#e9d5ff'), t.note(750, 420, 'Idea', '#fed7aa'),
             ];
-            return [centre, title, ...notes, ...notes.map((note) => t.arrow(centre, note))];
+            return [centre, ...notes, ...notes.map((note) => t.arrow(centre, note))];
         },
     },
     {
@@ -61,15 +58,13 @@ const TEMPLATES = [
         description: 'Steps and a decision, already connected',
         build() {
             const t = templateBuilder();
-            const start = t.box(280, 0, 200, 80, '#bbf7d0', 'ellipse');
-            const step = t.box(280, 150, 200, 90, '#dbeafe');
-            const decision = t.box(280, 310, 200, 90, '#fef08a');
-            const yes = t.box(0, 480, 200, 90, '#dbeafe');
-            const no = t.box(560, 480, 200, 90, '#fecaca');
+            const start = t.box(280, 0, 200, 80, '#bbf7d0', 'ellipse', 'Start');
+            const step = t.box(280, 150, 200, 90, '#dbeafe', 'rectangle', 'Do something');
+            const decision = t.box(280, 310, 200, 90, '#fef08a', 'rectangle', 'Decide?');
+            const yes = t.box(0, 480, 200, 90, '#dbeafe', 'rectangle', 'Yes');
+            const no = t.box(560, 480, 200, 90, '#fecaca', 'rectangle', 'No');
             return [
                 start, step, decision, yes, no,
-                t.label(280, 26, 200, 'Start'), t.label(280, 180, 200, 'Do something'),
-                t.label(280, 340, 200, 'Decide?'), t.label(0, 510, 200, 'Yes'), t.label(560, 510, 200, 'No'),
                 t.arrow(start, step), t.arrow(step, decision), t.arrow(decision, yes), t.arrow(decision, no),
             ];
         },

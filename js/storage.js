@@ -25,6 +25,13 @@ function isValidItem(item) {
             && item.fontFamily in FONTS
             && TEXT_ALIGNMENTS.includes(item.align);
     }
+    if (FILLABLE_TYPES.includes(item.type) && !(typeof item.text === 'string'
+        && Number.isFinite(item.fontSize)
+        && item.fontFamily in FONTS
+        && TEXT_ALIGNMENTS.includes(item.align)
+        && COLOR_PATTERN.test(item.textColor))) {
+        return false;
+    }
     return DRAWING_TYPES.includes(item.type)
         && Number.isFinite(item.strokeWidth)
         && Array.isArray(item.points)
@@ -64,6 +71,9 @@ function normaliseItem(raw) {
             startId: typeof raw.startId === 'string' ? raw.startId : null,
             endId: typeof raw.endId === 'string' ? raw.endId : null,
         };
+    }
+    if (FILLABLE_TYPES.includes(raw.type)) {
+        return { ...SHAPE_TEXT_DEFAULTS, ...raw, ...base, fill };
     }
     return { ...raw, ...base, fill };
 }
@@ -204,6 +214,25 @@ function drawTextItem(target, item, box) {
     });
 }
 
+function drawShapeLabel(target, item, box) {
+    const lineHeight = item.fontSize * 1.5;
+    target.font = `${item.bold ? 700 : 400} ${item.fontSize}px ${FONTS[item.fontFamily]}`;
+    target.fillStyle = item.textColor;
+    target.textBaseline = 'middle';
+    target.textAlign = item.align;
+    const inset = item.type === 'ellipse' ? box.w * ELLIPSE_TEXT_INSET : SHAPE_TEXT_PADDING;
+    const lines = wrapText(target, item.text, box.w - inset * 2);
+    const top = box.y + box.h / 2 - (lines.length * lineHeight) / 2;
+    const textX = {
+        left: box.x + inset,
+        center: box.x + box.w / 2,
+        right: box.x + box.w - inset,
+    }[item.align];
+    lines.forEach((line, i) => {
+        target.fillText(line, textX, top + lineHeight * (i + 0.5));
+    });
+}
+
 function drawImageItem(target, item, box) {
     const image = elements.get(item.id).firstChild;
     if (image.complete && image.naturalWidth > 0) {
@@ -254,6 +283,9 @@ function drawExportItem(target, item) {
         drawImageItem(target, item, box);
     } else {
         drawStrokeItem(target, item);
+        if (item.text) {
+            drawShapeLabel(target, item, box);
+        }
     }
     target.restore();
 }

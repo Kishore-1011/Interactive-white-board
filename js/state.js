@@ -3,7 +3,8 @@
 // The board is one list of items, ordered back to front. The page is always drawn from it.
 // Every item also has: id, type, opacity, rotation, locked, groupId.
 // Text:     text, x, y, width, height, fontSize, fontFamily, bold, align, color, fill, note
-// Drawings: points, color, strokeWidth, fill (arrows also have startId, endId)
+// Drawings: points, color, strokeWidth, fill (arrows also have startId, endId;
+//           rectangles and ellipses also have text, fontSize, fontFamily, bold, align, textColor)
 // Images:   assetId, x, y, w, h
 let items = [];
 
@@ -34,6 +35,9 @@ let savedAssetKeys = null;
 let currentFill = null;
 let recentColors = [];
 let paletteTarget = 'color';
+
+let nudging = false;
+let pasteFallbackTimer = null;
 
 let clipboard = [];
 let pasteCount = 0;

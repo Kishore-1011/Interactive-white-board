@@ -173,6 +173,9 @@
             <div class="context-group" data-show="fillable">
                 <button id="fill-btn" type="button" class="swatch-btn" aria-label="Fill" aria-haspopup="true" aria-expanded="false" aria-controls="palette-menu" data-tip="Fill"><span id="fill-swatch" class="swatch swatch-fill"></span></button>
             </div>
+            <div class="context-group" data-show="label">
+                <button id="text-color-btn" type="button" class="swatch-btn" aria-label="Text color" aria-haspopup="true" aria-expanded="false" aria-controls="palette-menu" data-tip="Text color"><span id="text-color-swatch" class="swatch swatch-text">A</span></button>
+            </div>
             <div class="context-group" data-show="stroke draw">
                 <label for="brush-size" class="context-label">Size</label>
                 <input type="range" id="brush-size" class="range-input" min="1" max="30" step="1" value="4">
@@ -230,6 +233,7 @@
                 <span class="palette-label">Custom</span>
                 <input type="color" id="color-input" class="color-swatch" value="#000000" aria-label="Custom color">
                 <input type="color" id="fill-input" class="color-swatch" value="#fef08a" aria-label="Custom fill" hidden>
+                <input type="color" id="text-color-input" class="color-swatch" value="#111827" aria-label="Custom text color" hidden>
                 <button id="no-fill-btn" type="button" class="no-fill-btn" hidden>No fill</button>
             </div>
         </div>
@@ -258,6 +262,8 @@
                     <span class="handle" data-handle="w"></span>
                     <span class="handle handle-rotate" data-handle="rotate"></span>
                 </div>
+                <span id="arrow-start" class="handle arrow-handle" data-handle="arrow-start" hidden></span>
+                <span id="arrow-end" class="handle arrow-handle" data-handle="arrow-end" hidden></span>
                 <div id="marquee" hidden></div>
             </div>
         </div>
@@ -332,6 +338,8 @@
                 <dt>Ungroup</dt><dd><kbd>Ctrl+Shift+G</kbd></dd>
                 <dt>To front, to back</dt><dd><kbd>Ctrl+] / [</kbd></dd>
                 <dt>Delete</dt><dd><kbd>Del</kbd></dd>
+                <dt>Move a little</dt><dd><kbd>Arrow keys</kbd></dd>
+                <dt>Move further</dt><dd><kbd>Shift+Arrow keys</kbd></dd>
             </dl>
         </section>
         <section>

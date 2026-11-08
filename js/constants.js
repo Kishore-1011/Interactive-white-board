@@ -57,6 +57,16 @@ const SECONDARY_TOOLS = ['line', 'arrow', 'rectangle', 'ellipse'];
 const TOOL_KEYS = {
     v: 'select', h: 'hand', p: 'pen', e: 'eraser', l: 'line', a: 'arrow', r: 'rectangle', o: 'ellipse',
 };
+const SHAPE_TEXT_DEFAULTS = {
+    text: '', fontSize: 20, fontFamily: 'sans', bold: false, align: 'center', textColor: '#111827',
+};
+const SHAPE_TEXT_PADDING = 6;
+const ELLIPSE_TEXT_INSET = 0.14;
+const NUDGE_SMALL = 1;
+const NUDGE_LARGE = 10;
+const NUDGE_VECTORS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+const CLIPBOARD_MARKER = 'interactive-white-board-objects';
+const PASTE_FALLBACK_MS = 60;
 const ATTACH_MARGIN = 8;
 const ATTACH_GAP = 6;
 const ARROW_HEAD_MIN = 12;

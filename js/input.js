@@ -30,7 +30,9 @@ board.addEventListener('pointerdown', function (e) {
 
     const handle = e.target.closest('[data-handle]');
     if (handle && !selectionLocked()) {
-        if (handle.dataset.handle === 'rotate') {
+        if (handle.dataset.handle.startsWith('arrow-')) {
+            startArrowEnd(handle.dataset.handle === 'arrow-end' ? 1 : 0);
+        } else if (handle.dataset.handle === 'rotate') {
             startRotate(e);
         } else {
             startResize(e, handle.dataset.handle);
@@ -117,6 +119,7 @@ document.addEventListener('pointermove', function (e) {
             resize: continueResize,
             rotate: continueRotate,
             marquee: continueMarquee,
+            'arrow-end': continueArrowEnd,
         };
         handlers[gesture.kind](e);
     }
@@ -135,7 +138,7 @@ function endPointer(e) {
     } else if (gesture && gesture.kind === 'pan') {
         finishPan();
     } else if (gesture && gesture.kind === 'marquee') {
-        finishMarquee();
+        finishMarquee(e);
     } else if (gesture) {
         finishTransform(e);
     }
@@ -145,17 +148,20 @@ document.addEventListener('pointerup', endPointer);
 document.addEventListener('pointercancel', endPointer);
 
 board.addEventListener('focusout', function (e) {
-    const element = e.target.closest('.text-box');
-    if (!element || element.dataset.id !== editingId) {
+    const editable = e.target.closest('.text-box, .shape-text');
+    const owner = editable && editable.closest('.item');
+    if (!owner || owner.dataset.id !== editingId) {
         return;
     }
     const item = findItem(editingId);
-    const text = element.innerText;
+    const text = editable.innerText;
     if (text.trim()) {
-        item.text = text; // A blank edit keeps the old text so the box can't become invisible.
+        item.text = text;
+    } else if (canHoldText(item)) {
+        item.text = ''; // A shape can simply have no label; a text box would become invisible.
     }
     editingId = null;
-    element.contentEditable = 'false';
+    editable.contentEditable = 'false';
     commit();
 });
 
@@ -209,6 +215,17 @@ document.addEventListener('keydown', function (e) {
 
     const key = e.key.toLowerCase();
     const command = e.ctrlKey || e.metaKey;
+    if (NUDGE_VECTORS[e.key] && !command && selectedIds.length > 0 && !selectionLocked() && !e.target.matches('input')) {
+        e.preventDefault();
+        nudgeSelection(NUDGE_VECTORS[e.key], e.shiftKey ? NUDGE_LARGE : NUDGE_SMALL);
+        return;
+    }
+    if (command && key === 'v') {
+        // The browser's paste event does the work. This only covers browsers that don't send one.
+        clearTimeout(pasteFallbackTimer);
+        pasteFallbackTimer = setTimeout(() => paste(), PASTE_FALLBACK_MS);
+        return;
+    }
     if (!command && !e.altKey && !e.shiftKey) {
         const addShortcuts = { t: () => addTextBox(), n: () => addNote(), i: () => imageInput.click() };
         if (TOOL_KEYS[key]) {
@@ -226,7 +243,6 @@ document.addEventListener('keydown', function (e) {
         y: redo,
         c: copySelection,
         x: cutSelection,
-        v: paste,
         d: duplicateSelection,
         a: selectAll,
         g: () => (e.shiftKey ? ungroup() : toggleGroup()),
@@ -249,13 +265,33 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
+document.addEventListener('paste', function (e) {
+    clearTimeout(pasteFallbackTimer);
+    if (anyDialogOpen() || editingId || e.target.matches('input, select')) {
+        return; // Pasting into a text field works as normal.
+    }
+    e.preventDefault();
+    const images = [...e.clipboardData.files].filter((file) => IMAGE_TYPES.includes(file.type));
+    if (images.length > 0) {
+        addImageFiles(images, null);
+    } else {
+        paste();
+    }
+});
+
 document.addEventListener('keyup', function (e) {
     if (e.code === 'Space') {
         setSpaceHeld(false);
     }
+    if (NUDGE_VECTORS[e.key]) {
+        finishNudge();
+    }
 });
 
-window.addEventListener('blur', () => setSpaceHeld(false));
+window.addEventListener('blur', () => {
+    setSpaceHeld(false);
+    finishNudge();
+});
 
 // `input` previews the change live; `change` fires once at the end and records one undo step.
 fontSizeInput.addEventListener('input', function () {
@@ -282,6 +318,17 @@ colorInput.addEventListener('change', function () {
     commit();
     addRecentColor(this.value);
 });
+
+textColorInput.addEventListener('input', function () {
+    setTextColor(this.value);
+});
+
+textColorInput.addEventListener('change', function () {
+    commit();
+    addRecentColor(this.value);
+});
+
+textColorButton.addEventListener('click', () => togglePalette('text', textColorButton));
 
 fillInput.addEventListener('input', function () {
     setFill(this.value);

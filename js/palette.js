@@ -46,6 +46,7 @@ function displayedFill() {
 
 function updateSwatches() {
     colorSwatch.style.background = colorInput.value;
+    textColorSwatch.style.background = textColorInput.value;
     const fill = displayedFill();
     fillSwatch.style.background = fill || '';
     fillSwatch.classList.toggle('no-fill', !fill);
@@ -59,6 +60,16 @@ function setColor(color) {
     updateSelected((item) => {
         if (!isImage(item)) {
             item.color = color;
+        }
+    });
+    updateSwatches();
+}
+
+function setTextColor(color) {
+    textColorInput.value = color;
+    updateSelected((item) => {
+        if (canHoldText(item)) {
+            item.textColor = color;
         }
     });
     updateSwatches();
@@ -107,6 +118,8 @@ function loadRecentColors() {
 function applyPaletteColor(color) {
     if (paletteTarget === 'fill') {
         setFill(color);
+    } else if (paletteTarget === 'text') {
+        setTextColor(color);
     } else {
         setColor(color);
     }
@@ -135,6 +148,7 @@ function togglePalette(target, opener) {
     paletteTarget = target;
     colorInput.hidden = target !== 'color';
     fillInput.hidden = target !== 'fill';
+    textColorInput.hidden = target !== 'text';
     noFillButton.hidden = target !== 'fill' || selectedItems().some((item) => item.note);
     setPopover(paletteMenu, opener, !wasOpen);
 }
@@ -156,26 +170,26 @@ function updateTextStyleButtons(text) {
 
 function setTextStyle(apply) {
     updateSelected((item) => {
-        if (isText(item)) {
+        if (isStyledText(item)) {
             apply(item);
         }
     });
     commit();
-    const text = selectedItems().find(isText);
+    const text = selectedItems().find(isStyledText);
     if (text) {
         updateTextStyleButtons(text);
     }
 }
 
 function toggleBold() {
-    const bold = !selectedItems().find(isText).bold;
+    const bold = !selectedItems().find(isStyledText).bold;
     setTextStyle((item) => {
         item.bold = bold;
     });
 }
 
 function cycleTextAlign() {
-    const current = selectedItems().find(isText).align;
+    const current = selectedItems().find(isStyledText).align;
     const align = TEXT_ALIGNMENTS[(TEXT_ALIGNMENTS.indexOf(current) + 1) % TEXT_ALIGNMENTS.length];
     setTextStyle((item) => {
         item.align = align;

@@ -104,6 +104,51 @@ function finishArrow() {
     return kept;
 }
 
+// A selected arrow shows a handle on each end instead of a resize frame.
+function updateArrowHandles() {
+    const selected = selectedItems(); // During an undo, the selected object may no longer exist.
+    const [arrow] = selected;
+    const show = selected.length === 1 && arrow.type === 'arrow' && !arrow.locked && !editingId;
+    arrowHandles.forEach((handle) => {
+        handle.hidden = !show;
+    });
+    if (!show) {
+        return;
+    }
+    const centre = boxCentre(pointsBox(arrow.points));
+    arrow.points.forEach((point, index) => {
+        const screen = boardToScreen(rotatePoint(point, centre, arrow.rotation));
+        arrowHandles[index].style.left = screen.x + 'px';
+        arrowHandles[index].style.top = screen.y + 'px';
+        arrowHandles[index].classList.toggle('attached', Boolean(index ? arrow.endId : arrow.startId));
+    });
+}
+
+function startArrowEnd(which) {
+    const [arrow] = selectedItems();
+    if (arrow.rotation) {
+        const centre = boxCentre(pointsBox(arrow.points));
+        arrow.points = arrow.points.map((point) => {
+            const turned = rotatePoint(point, centre, arrow.rotation);
+            return { x: round(turned.x), y: round(turned.y) };
+        });
+        arrow.rotation = 0;
+    }
+    gesture = { kind: 'arrow-end', arrow, which };
+}
+
+function continueArrowEnd(e) {
+    const { arrow, which } = gesture;
+    const point = boardPoint(e);
+    const target = attachTargetAt(point, which ? arrow.startId : arrow.endId);
+    arrow[which ? 'endId' : 'startId'] = target ? target.id : null;
+    arrow.points[which] = snapDrawPoint(point, e);
+    setAttachHighlight(target);
+    refreshArrows();
+    renderItem(arrow);
+    updateFrame();
+}
+
 // Moving an arrow by itself pulls it off whatever it was joined to.
 function detachSelectedArrows() {
     selectedItems().forEach((arrow) => {

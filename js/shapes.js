@@ -104,6 +104,7 @@ function startDrawing(e) {
         points: tool === 'pen' ? [point] : [snapDrawPoint(point, e), snapDrawPoint(point, e)],
         color: colorInput.value,
         strokeWidth: Number(brushSizeInput.value),
+        ...(FILLABLE_TYPES.includes(tool) ? SHAPE_TEXT_DEFAULTS : {}),
         fill: FILLABLE_TYPES.includes(tool) ? currentFill : null,
         opacity: 1,
         rotation: 0,
@@ -138,7 +139,14 @@ function continueDrawing(e) {
     renderItem(activeDrawing);
 }
 
+// After drawing a shape you nearly always want to adjust it. The pen stays on for the next stroke.
+function afterShapeDrawn(item) {
+    setTool('select');
+    select([item.id]);
+}
+
 function finishDrawing() {
+    const drawn = activeDrawing;
     if (activeDrawing && activeDrawing.type === 'arrow') {
         if (!finishArrow()) {
             items.pop();
@@ -152,4 +160,7 @@ function finishDrawing() {
     activeDrawing = null;
     eraser = null;
     commit();
+    if (drawn && drawn.type !== 'pen' && items.includes(drawn)) {
+        afterShapeDrawn(drawn);
+    }
 }

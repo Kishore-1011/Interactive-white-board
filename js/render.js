@@ -27,7 +27,30 @@ function createItemElement(item) {
     });
     svg.appendChild(group);
     element.appendChild(svg);
+    if (canHoldText(item)) {
+        const label = document.createElement('div');
+        label.className = 'shape-label';
+        const text = document.createElement('div');
+        text.className = 'shape-text';
+        text.contentEditable = 'false';
+        label.appendChild(text);
+        element.appendChild(label);
+        element.dataset.shape = item.type;
+    }
     return element;
+}
+
+function renderShapeLabel(element, item) {
+    const text = element.querySelector('.shape-text');
+    if (item.id !== editingId && text.innerText !== item.text) {
+        text.innerText = item.text;
+    }
+    text.style.fontSize = item.fontSize + 'px';
+    text.style.fontFamily = FONTS[item.fontFamily];
+    text.style.fontWeight = item.bold ? '700' : '';
+    text.style.textAlign = item.align;
+    text.style.color = item.textColor;
+    element.classList.toggle('has-label', Boolean(item.text));
 }
 
 function renderItem(item) {
@@ -77,6 +100,9 @@ function renderItem(item) {
         element.style.top = box.y + 'px';
         element.style.width = box.w + 'px';
         element.style.height = box.h + 'px';
+        if (canHoldText(item)) {
+            renderShapeLabel(element, item);
+        }
     }
     element.style.transform = item.rotation ? `rotate(${item.rotation}deg)` : '';
 }
@@ -128,6 +154,9 @@ function frameMode() {
         return 'uniform';
     }
     const [item] = selected;
+    if (item.type === 'arrow') {
+        return 'arrow';
+    }
     if (isImage(item)) {
         return 'uniform';
     }
@@ -135,6 +164,7 @@ function frameMode() {
 }
 
 function updateFrame() {
+    updateArrowHandles();
     const frame = currentFrame();
     selectionFrameElement.hidden = !frame;
     if (!frame) {
@@ -219,8 +249,11 @@ function updateContextBar() {
             if (alignUnits().length >= 2) {
                 tags.add('multi');
             }
-            if (selected.some(isText)) {
+            if (selected.some(isStyledText)) {
                 tags.add('text');
+            }
+            if (selected.some((item) => canHoldText(item) && item.text)) {
+                tags.add('label');
             }
             if (selected.some(isDrawing)) {
                 tags.add('stroke');
@@ -231,7 +264,7 @@ function updateContextBar() {
             if (selected.some(isFillable)) {
                 tags.add('fillable');
             }
-            if (selected.length === 1 && isText(selected[0])) {
+            if (selected.length === 1 && (isText(selected[0]) || canHoldText(selected[0]))) {
                 tags.add('single-text');
             }
         }

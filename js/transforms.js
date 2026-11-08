@@ -35,6 +35,25 @@ function continueMove(e) {
     updateFrame();
 }
 
+// Arrow keys move the selection. A held key counts as one undo step, recorded on release.
+function nudgeSelection([x, y], step) {
+    detachSelectedArrows();
+    selectedItems().forEach((item) => {
+        moveItem(item, clone(item), x * step, y * step);
+        renderItem(item);
+    });
+    refreshArrows();
+    updateFrame();
+    nudging = true;
+}
+
+function finishNudge() {
+    if (nudging) {
+        nudging = false;
+        commit();
+    }
+}
+
 function startResize(e, handle) {
     detachSelectedArrows();
     const selected = selectedItems();
@@ -88,6 +107,9 @@ function resizeItem(entry, itemCentre, sx, sy) {
             x: round(itemCentre.x + (point.x - centre.x) * sx),
             y: round(itemCentre.y + (point.y - centre.y) * sy),
         }));
+        if (gesture.uniform && item.text) {
+            item.fontSize = round(start.fontSize * sx);
+        }
     }
 }
 
@@ -224,13 +246,17 @@ function continueMarquee(e) {
     marqueeElement.style.height = box.h * camera.zoom + 'px';
 }
 
-function finishMarquee() {
+function finishMarquee(e) {
     marqueeElement.hidden = true;
-    const { moved, box, base, additive } = gesture;
+    const { moved, box, base, additive, origin } = gesture;
     gesture = null;
     if (!moved) {
         if (!additive) {
             select([]);
+            const shape = shapeAt(origin);
+            if (shape && e.type === 'pointerup') {
+                registerTap(elements.get(shape.id), e.timeStamp);
+            }
         }
         return;
     }
@@ -244,12 +270,14 @@ function finishTransform(e) {
     const finished = gesture;
     gesture = null;
     drawGuides([]);
+    setAttachHighlight(null);
     commit();
     if (finished.kind === 'move' && !finished.moved) {
         if (finished.collapseTo) {
             select([finished.collapseTo]);
         }
-        if (finished.element.classList.contains('text-box') && e.type === 'pointerup') {
+        const tapped = findItem(finished.element.dataset.id);
+        if (tapped && (isText(tapped) || canHoldText(tapped)) && e.type === 'pointerup') {
             registerTap(finished.element, e.timeStamp);
         }
     }

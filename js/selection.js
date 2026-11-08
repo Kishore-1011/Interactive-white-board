@@ -13,8 +13,12 @@ function expandGroups(ids) {
 // Selecting also shows the selection's size and colour in the controls.
 function syncControls() {
     const selected = selectedItems();
-    const text = selected.find(isText);
+    const text = selected.find(isStyledText);
     const drawing = selected.find(isDrawing);
+    const labelled = selected.find((item) => canHoldText(item) && item.text);
+    if (labelled) {
+        textColorInput.value = labelled.textColor;
+    }
     const coloured = selected.find((item) => !isImage(item));
     if (text) {
         fontSizeInput.value = Math.round(text.fontSize);
@@ -89,6 +93,7 @@ function addTextItem(overrides) {
     selectedIds = [item.id];
     commit();
     syncControls();
+    beginTyping(item.id);
 }
 
 function addTextBox(position = {}) {
@@ -133,7 +138,7 @@ function updateSelected(apply) {
 
 function setFontSize(size) {
     updateSelected((item) => {
-        if (isText(item)) {
+        if (isStyledText(item)) {
             item.fontSize = size;
         }
     });
@@ -241,6 +246,10 @@ function copySelection() {
     if (selectedIds.length > 0) {
         clipboard = clone(selectedItems());
         pasteCount = 0;
+        // Replaces any picture on the system clipboard, so the next paste is what was just copied.
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(CLIPBOARD_MARKER).catch(() => {});
+        }
     }
 }
 
