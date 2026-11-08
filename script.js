@@ -10,10 +10,24 @@ const redoButton = document.getElementById('redo-btn');
 const frontButton = document.getElementById('front-btn');
 const deleteButton = document.getElementById('delete-btn');
 const importInput = document.getElementById('import-input');
-const statusLine = document.getElementById('status');
+const toast = document.getElementById('toast');
 const toolButtons = [...document.querySelectorAll('.tool-btn')];
+const boardNameInput = document.getElementById('board-name');
+const saveState = document.getElementById('save-state');
+const saveIcon = document.getElementById('save-icon');
+const saveLabel = document.getElementById('save-label');
+const contextBar = document.getElementById('context-bar');
+const contextGroups = [...contextBar.querySelectorAll('.context-group')];
+const brushValue = document.getElementById('brush-value');
+const themeButton = document.getElementById('theme-btn');
+const exportToggle = document.getElementById('export-toggle');
+const exportMenu = document.getElementById('export-menu');
 
 const STORAGE_KEY = 'interactive-white-board';
+const NAME_STORAGE_KEY = 'interactive-white-board:name';
+const THEME_STORAGE_KEY = 'interactive-white-board:theme';
+const DEFAULT_BOARD_NAME = 'Untitled board';
+const TOAST_MS = 3500;
 const MAX_UNDO_STEPS = 100;
 const CASCADE_START = 24;
 const CASCADE_STEP = 28;
@@ -60,8 +74,22 @@ function isInteracting() {
     return Boolean(drag || activeDrawing || eraser);
 }
 
-function setStatus(message) {
-    statusLine.textContent = message;
+let toastTimer = null;
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('visible'), TOAST_MS);
+}
+
+function setSaveState(isSaved) {
+    saveState.dataset.state = isSaved ? 'saved' : 'error';
+    saveIcon.setAttribute('href', isSaved ? '#i-check' : '#i-alert');
+    saveLabel.textContent = isSaved ? 'Saved' : 'Autosave off';
+    saveState.title = isSaved
+        ? 'Saved in this browser'
+        : 'This browser is not saving your board. Use Export to keep it.';
 }
 
 // --- Drawing layer ---
@@ -261,6 +289,23 @@ function updateButtons() {
     redoButton.disabled = undoIndex === undoStack.length - 1;
     frontButton.disabled = !findBox(selectedId);
     deleteButton.disabled = !findBox(selectedId);
+    updateContextBar();
+}
+
+// The floating bar only offers options that apply to what's selected or active.
+function updateContextBar() {
+    let mode = '';
+    if (tool === 'eraser') {
+        mode = 'eraser';
+    } else if (DRAWING_TYPES.includes(tool)) {
+        mode = 'draw';
+    } else if (findBox(selectedId)) {
+        mode = 'text';
+    }
+    contextBar.hidden = !mode;
+    contextGroups.forEach((group) => {
+        group.hidden = !group.dataset.show.split(' ').includes(mode);
+    });
 }
 
 // Existing elements are reused so a redraw never interrupts a drag or an edit in progress.
@@ -295,8 +340,9 @@ function render() {
 function save(json) {
     try {
         localStorage.setItem(STORAGE_KEY, json);
+        setSaveState(true);
     } catch (error) {
-        setStatus('Autosave is unavailable, so export your board to keep it.');
+        setSaveState(false);
     }
 }
 
@@ -359,6 +405,7 @@ function setTool(name) {
         button.classList.toggle('active', isActive);
         button.setAttribute('aria-pressed', String(isActive));
     });
+    updateContextBar();
 }
 
 function addTextBox() {
@@ -446,6 +493,69 @@ function fontSizeLimits() {
     return { min: Number(fontSizeInput.min), max: Number(fontSizeInput.max) };
 }
 
+function stepFontSize(delta) {
+    const { min, max } = fontSizeLimits();
+    const size = Math.min(max, Math.max(min, Number(fontSizeInput.value) + delta));
+    fontSizeInput.value = size;
+    updateSelected({ fontSize: size });
+    commit();
+}
+
+// --- Board name, theme and menus ---
+
+function boardName() {
+    return boardNameInput.value.trim() || DEFAULT_BOARD_NAME;
+}
+
+function storeBoardName() {
+    try {
+        localStorage.setItem(NAME_STORAGE_KEY, boardName());
+    } catch (error) {
+        setSaveState(false);
+    }
+}
+
+function setBoardName(name) {
+    boardNameInput.value = name.slice(0, Number(boardNameInput.maxLength));
+    storeBoardName();
+}
+
+function loadBoardName() {
+    try {
+        boardNameInput.value = localStorage.getItem(NAME_STORAGE_KEY) || DEFAULT_BOARD_NAME;
+    } catch (error) {
+        boardNameInput.value = DEFAULT_BOARD_NAME;
+    }
+}
+
+function exportFilename(extension) {
+    const safeName = boardName().replace(/[\\/:*?"<>|]+/g, '').trim().replace(/\s+/g, '-');
+    return `${safeName || 'whiteboard'}.${extension}`;
+}
+
+function updateThemeButton() {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    const label = `Switch to ${next} theme`;
+    themeButton.setAttribute('aria-label', label);
+    themeButton.dataset.tip = label;
+}
+
+function toggleTheme() {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    updateThemeButton();
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch (error) {
+        // The theme still applies for this visit; it just won't be remembered.
+    }
+}
+
+function setExportMenu(isOpen) {
+    exportMenu.hidden = !isOpen;
+    exportToggle.setAttribute('aria-expanded', String(isOpen));
+}
+
 // --- Saving and opening ---
 
 function isValidBox(box) {
@@ -505,7 +615,8 @@ function downloadBlob(blob, filename) {
 }
 
 function exportJson() {
-    downloadBlob(new Blob([snapshot()], { type: 'application/json' }), 'whiteboard.json');
+    const json = JSON.stringify({ name: boardName(), boxes, drawings });
+    downloadBlob(new Blob([json], { type: 'application/json' }), exportFilename('json'));
 }
 
 function wrapText(target, text, maxWidth) {
@@ -552,7 +663,7 @@ function exportPng() {
     drawings.forEach((item) => drawItem(target, item));
     boxes.forEach((box, index) => drawBoxText(target, box, textLayer.children[index]));
 
-    output.toBlob((blob) => downloadBlob(blob, 'whiteboard.png'), 'image/png');
+    output.toBlob((blob) => downloadBlob(blob, exportFilename('png')), 'image/png');
 }
 
 async function importJson() {
@@ -562,12 +673,16 @@ async function importJson() {
         return;
     }
     try {
-        setBoard(parseBoard(await file.text()));
+        const data = parseBoard(await file.text());
+        setBoard(data);
         commit();
         select(null);
-        setStatus(`Opened ${file.name}.`);
+        if (typeof data.name === 'string' && data.name.trim()) {
+            setBoardName(data.name.trim());
+        }
+        showToast(`Opened ${file.name}.`);
     } catch (error) {
-        setStatus('That file is not a saved whiteboard.');
+        showToast('That file is not a saved whiteboard.');
     }
 }
 
@@ -666,14 +781,19 @@ board.addEventListener('focusout', function (e) {
 });
 
 document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !exportMenu.hidden) {
+        setExportMenu(false);
+        exportToggle.focus();
+        return;
+    }
     if (editingId) {
         if (e.key === 'Escape') {
             finishEditing();
         }
         return;
     }
-    if (e.target.matches('input[type="number"]')) {
-        return;
+    if (e.target.matches('input[type="number"], input[type="text"]')) {
+        return; // Typing in a field must never trigger board shortcuts.
     }
 
     const key = e.key.toLowerCase();
@@ -718,6 +838,31 @@ colorInput.addEventListener('input', function () {
 
 colorInput.addEventListener('change', commit);
 
+brushSizeInput.addEventListener('input', function () {
+    brushValue.textContent = this.value;
+});
+
+boardNameInput.addEventListener('input', storeBoardName);
+
+boardNameInput.addEventListener('blur', function () {
+    this.value = boardName();
+});
+
+boardNameInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+        this.blur();
+    }
+});
+
+exportToggle.addEventListener('click', () => setExportMenu(exportMenu.hidden));
+exportMenu.addEventListener('click', () => setExportMenu(false));
+
+document.addEventListener('pointerdown', function (e) {
+    if (!exportMenu.hidden && !e.target.closest('.export-wrap')) {
+        setExportMenu(false);
+    }
+});
+
 new ResizeObserver(function () {
     resizeCanvas();
     if (!isInteracting() && !editingId) {
@@ -730,6 +875,9 @@ toolButtons.forEach((button) => {
 });
 
 document.getElementById('add-text-btn').addEventListener('click', addTextBox);
+document.getElementById('font-down').addEventListener('click', () => stepFontSize(-1));
+document.getElementById('font-up').addEventListener('click', () => stepFontSize(1));
+themeButton.addEventListener('click', toggleTheme);
 undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
 frontButton.addEventListener('click', bringToFront);
@@ -743,6 +891,8 @@ importInput.addEventListener('change', importJson);
 // --- Start ---
 
 loadSavedBoard();
+loadBoardName();
+updateThemeButton();
 resizeCanvas();
 render();
 undoStack = [snapshot()];

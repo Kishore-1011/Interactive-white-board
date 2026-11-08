@@ -5,62 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A whiteboard in the browser: draw, add text, undo, autosave and export to PNG.">
     <title>Interactive White Board</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234f46e5'/><path d='M7 17l1-3.5 7.5-7.5 2.5 2.5-7.5 7.5z' fill='white'/></svg>">
+    <script>
+        // Set the theme before the first paint so the page never flashes the wrong one.
+        (function () {
+            var saved;
+            try { saved = localStorage.getItem('interactive-white-board:theme'); } catch (error) {}
+            document.documentElement.dataset.theme = saved
+                || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="row m-2 m-md-5">
-        <div id="white-board" class="col-md-9">
+<svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-select" viewBox="0 0 24 24"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 7V5h16v2"/><path d="M9 19h6"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 19 19 5"/></symbol>
+    <symbol id="i-rectangle" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/></symbol>
+    <symbol id="i-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="7"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+    <symbol id="i-front" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M4 10a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2"/><path d="M14 20a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.9 19.1 1.4-1.4"/><path d="m17.7 6.3 1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+</svg>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg></span>
+        <input id="board-name" class="board-name" type="text" maxlength="60" value="Untitled board"
+               autocomplete="off" spellcheck="false" aria-label="Board name">
+        <span id="save-state" class="save-state" role="status">
+            <svg class="icon icon-small" aria-hidden="true"><use id="save-icon" href="#i-check"/></svg>
+            <span id="save-label" class="save-label">Saved</span>
+        </span>
+    </div>
+
+    <div class="topbar-center">
+        <button id="undo-btn" type="button" class="icon-btn" aria-label="Undo" data-tip="Undo (Ctrl+Z)"><svg class="icon"><use href="#i-undo"/></svg></button>
+        <button id="redo-btn" type="button" class="icon-btn" aria-label="Redo" data-tip="Redo (Ctrl+Y)"><svg class="icon"><use href="#i-redo"/></svg></button>
+    </div>
+
+    <div class="topbar-right">
+        <button id="theme-btn" type="button" class="icon-btn" aria-label="Switch theme" data-tip="Switch theme">
+            <svg class="icon show-in-dark"><use href="#i-sun"/></svg>
+            <svg class="icon show-in-light"><use href="#i-moon"/></svg>
+        </button>
+        <button id="import-json-btn" type="button" class="text-btn">
+            <svg class="icon"><use href="#i-open"/></svg><span class="btn-label">Open</span>
+        </button>
+        <div class="export-wrap">
+            <button id="export-toggle" type="button" class="primary-btn" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
+                <svg class="icon"><use href="#i-download"/></svg><span class="btn-label">Export</span>
+                <svg class="icon icon-small btn-label"><use href="#i-chevron"/></svg>
+            </button>
+            <div id="export-menu" class="export-menu" hidden>
+                <button id="export-png-btn" type="button" class="menu-item">
+                    <strong>PNG image</strong><span>Share or print the board</span>
+                </button>
+                <button id="export-json-btn" type="button" class="menu-item">
+                    <strong>JSON file</strong><span>Keep it editable and open it later</span>
+                </button>
+            </div>
+        </div>
+        <input type="file" id="import-input" accept="application/json,.json" hidden>
+    </div>
+</header>
+
+<div class="workspace">
+    <nav class="tool-rail" aria-label="Tools">
+        <button type="button" class="icon-btn tool-btn" data-tool="select" aria-label="Select" data-tip="Select and move"><svg class="icon"><use href="#i-select"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="pen" aria-label="Pen" data-tip="Pen"><svg class="icon"><use href="#i-pen"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="eraser" aria-label="Eraser" data-tip="Eraser"><svg class="icon"><use href="#i-eraser"/></svg></button>
+        <span class="rail-divider" aria-hidden="true"></span>
+        <button id="add-text-btn" type="button" class="icon-btn" aria-label="Add text" data-tip="Add text"><svg class="icon"><use href="#i-text"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="line" aria-label="Line" data-tip="Line"><svg class="icon"><use href="#i-line"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="rectangle" aria-label="Rectangle" data-tip="Rectangle"><svg class="icon"><use href="#i-rectangle"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="ellipse" aria-label="Ellipse" data-tip="Ellipse"><svg class="icon"><use href="#i-ellipse"/></svg></button>
+        <span class="rail-spacer" aria-hidden="true"></span>
+        <button id="clear-btn" type="button" class="icon-btn" aria-label="Clear board" data-tip="Clear board"><svg class="icon"><use href="#i-clear"/></svg></button>
+    </nav>
+
+    <main class="stage">
+        <div id="context-bar" class="context-bar" role="toolbar" aria-label="Options" hidden>
+            <div class="context-group" data-show="text">
+                <button id="font-down" type="button" class="icon-btn icon-btn-small" aria-label="Decrease font size" data-tip="Smaller"><svg class="icon icon-small"><use href="#i-minus"/></svg></button>
+                <input type="number" id="font-size" class="number-input" min="10" max="50" step="1" value="20" aria-label="Font size in pixels">
+                <button id="font-up" type="button" class="icon-btn icon-btn-small" aria-label="Increase font size" data-tip="Larger"><svg class="icon icon-small"><use href="#i-plus"/></svg></button>
+            </div>
+            <div class="context-group" data-show="text draw">
+                <span class="swatch-wrap" data-tip="Color"><input type="color" id="color-input" class="color-swatch" value="#000000" aria-label="Color"></span>
+            </div>
+            <div class="context-group" data-show="draw">
+                <label for="brush-size" class="context-label">Size</label>
+                <input type="range" id="brush-size" class="range-input" min="1" max="30" step="1" value="4">
+                <span id="brush-value" class="context-value">4</span>
+            </div>
+            <div class="context-group" data-show="text">
+                <button id="front-btn" type="button" class="icon-btn icon-btn-small" aria-label="Bring to front" data-tip="Bring to front"><svg class="icon icon-small"><use href="#i-front"/></svg></button>
+                <button id="delete-btn" type="button" class="icon-btn icon-btn-small icon-btn-danger" aria-label="Delete" data-tip="Delete (Del)"><svg class="icon icon-small"><use href="#i-trash"/></svg></button>
+            </div>
+            <div class="context-group context-hint" data-show="text">Double-click to edit</div>
+            <div class="context-group context-note" data-show="eraser">Drag across a stroke or shape to remove it</div>
+        </div>
+
+        <div id="white-board">
             <canvas id="drawing-layer" aria-hidden="true"></canvas>
             <div id="text-layer"></div>
         </div>
-        <div id="control-panel" class="col-md-3">
-            <div id="undo-redo-buttons" class="mb-3">
-                <button id="undo-btn" type="button" class="btn btn-secondary btn-undo-redo">Undo</button>
-                <button id="redo-btn" type="button" class="btn btn-secondary btn-undo-redo">Redo</button>
-            </div>
 
-            <div id="tools" class="button-grid mb-3" role="group" aria-label="Tools">
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="select">Select</button>
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="pen">Pen</button>
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="eraser">Eraser</button>
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="line">Line</button>
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="rectangle">Rectangle</button>
-                <button type="button" class="btn btn-outline-primary btn-sm tool-btn" data-tool="ellipse">Ellipse</button>
-            </div>
-
-            <label for="color-input" class="control-label">Color:</label>
-            <input type="color" id="color-input" value="#000000" class="form-control custom-range">
-
-            <label for="brush-size" class="control-label">Brush Size:</label>
-            <input type="range" id="brush-size" min="1" max="30" step="1" value="4" class="form-range mb-2">
-
-            <button id="add-text-btn" type="button" class="btn btn-primary">Add Text</button>
-            <p id="edit-hint" class="small text-muted">Double-click a text box to edit it.</p>
-
-            <label for="font-size" class="control-label">Font Size:</label>
-            <div class="input-group mb-3">
-                <input type="number" id="font-size" min="10" max="50" step="1" value="20" class="form-control">
-                <span class="input-group-text">px</span>
-            </div>
-
-            <div class="button-grid mb-3">
-                <button id="front-btn" type="button" class="btn btn-outline-secondary btn-sm">To Front</button>
-                <button id="delete-btn" type="button" class="btn btn-outline-danger btn-sm">Delete</button>
-                <button id="clear-btn" type="button" class="btn btn-outline-danger btn-sm">Clear</button>
-            </div>
-
-            <div class="button-grid">
-                <button id="export-png-btn" type="button" class="btn btn-outline-success btn-sm">Save PNG</button>
-                <button id="export-json-btn" type="button" class="btn btn-outline-success btn-sm">Save JSON</button>
-                <button id="import-json-btn" type="button" class="btn btn-outline-success btn-sm">Open JSON</button>
-            </div>
-            <input type="file" id="import-input" accept="application/json,.json" hidden>
-            <p id="status" class="small text-muted mt-2 mb-0" role="status"></p>
-        </div>
-    </div>
+        <p id="toast" class="toast" role="status"></p>
+    </main>
 </div>
 
 <script src="script.js"></script>
