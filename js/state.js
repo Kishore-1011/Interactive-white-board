@@ -1,8 +1,10 @@
 // --- The board and what the user is doing ---
 
 // The board is one list of items, ordered back to front. The page is always drawn from it.
-// Text:     { id, type: 'text', text, x, y, width, fontSize, color, rotation, locked, groupId }
-// Drawings: { id, type, points, color, strokeWidth, rotation, locked, groupId }
+// Every item also has: id, type, opacity, rotation, locked, groupId.
+// Text:     text, x, y, width, height, fontSize, fontFamily, bold, align, color, fill, note
+// Drawings: points, color, strokeWidth, fill (arrows also have startId, endId)
+// Images:   assetId, x, y, w, h
 let items = [];
 
 const elements = new Map();
@@ -26,6 +28,12 @@ let lastTap = null;
 let spaceHeld = false;
 let pinch = null;
 const touches = new Map();
+
+const assets = new Map();
+let savedAssetKeys = null;
+let currentFill = null;
+let recentColors = [];
+let paletteTarget = 'color';
 
 let clipboard = [];
 let pasteCount = 0;

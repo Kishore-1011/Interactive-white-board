@@ -16,6 +16,18 @@ function isText(item) {
     return item.type === 'text';
 }
 
+function isImage(item) {
+    return item.type === 'image';
+}
+
+function isDrawing(item) {
+    return DRAWING_TYPES.includes(item.type);
+}
+
+function isFillable(item) {
+    return Boolean(item.note) || FILLABLE_TYPES.includes(item.type);
+}
+
 function findItem(id) {
     return items.find((item) => item.id === id);
 }
@@ -76,6 +88,9 @@ function itemBox(item) {
             h: element ? element.offsetHeight : 0,
         };
     }
+    if (isImage(item)) {
+        return { x: item.x, y: item.y, w: item.w, h: item.h };
+    }
     return pointsBox(item.points);
 }
 
@@ -120,7 +135,7 @@ function viewportSize() {
 }
 
 function moveItem(item, start, dx, dy) {
-    if (isText(item)) {
+    if (!isDrawing(item)) {
         item.x = round(start.x + dx);
         item.y = round(start.y + dy);
     } else {

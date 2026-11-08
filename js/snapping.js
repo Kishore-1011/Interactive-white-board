@@ -119,17 +119,7 @@ function drawGuides(guides) {
 }
 
 function setAlignMenu(isOpen) {
-    alignMenu.hidden = !isOpen;
-    alignButton.setAttribute('aria-expanded', String(isOpen));
-    if (!isOpen) {
-        return;
-    }
-    const stageRect = stage.getBoundingClientRect();
-    const buttonRect = alignButton.getBoundingClientRect();
-    const middle = buttonRect.left + buttonRect.width / 2 - stageRect.left;
-    const maxLeft = stageRect.width - alignMenu.offsetWidth - MENU_MARGIN;
-    alignMenu.style.left = Math.max(MENU_MARGIN, Math.min(middle - alignMenu.offsetWidth / 2, maxLeft)) + 'px';
-    alignMenu.style.top = buttonRect.bottom - stageRect.top + MENU_GAP + 'px';
+    setPopover(alignMenu, alignButton, isOpen);
 }
 
 // What lines up as a single piece: each group counts as one, unless a group is

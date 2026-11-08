@@ -152,9 +152,7 @@ document.addEventListener('keydown', function (e) {
         exportToggle.focus();
         return;
     }
-    if (e.key === 'Escape' && !alignMenu.hidden) {
-        setAlignMenu(false);
-        alignButton.focus();
+    if (e.key === 'Escape' && closeOpenPopovers()) {
         return;
     }
     if (editingId) {
@@ -239,13 +237,91 @@ fontSizeInput.addEventListener('change', function () {
 });
 
 colorInput.addEventListener('input', function () {
-    const color = this.value;
-    updateSelected((item) => {
-        item.color = color;
+    setColor(this.value);
+});
+
+colorInput.addEventListener('change', function () {
+    commit();
+    addRecentColor(this.value);
+});
+
+fillInput.addEventListener('input', function () {
+    setFill(this.value);
+});
+
+fillInput.addEventListener('change', function () {
+    commit();
+    addRecentColor(this.value);
+});
+
+opacityInput.addEventListener('input', function () {
+    setOpacity(Number(this.value));
+});
+
+opacityInput.addEventListener('change', commit);
+
+fontFamilySelect.addEventListener('change', function () {
+    const fontFamily = this.value;
+    setTextStyle((item) => {
+        item.fontFamily = fontFamily;
     });
 });
 
-colorInput.addEventListener('change', commit);
+boldButton.addEventListener('click', toggleBold);
+textAlignButton.addEventListener('click', cycleTextAlign);
+colorButton.addEventListener('click', () => togglePalette('color', colorButton));
+fillButton.addEventListener('click', () => togglePalette('fill', fillButton));
+layerButton.addEventListener('click', () => setPopover(layerMenu, layerButton, layerMenu.hidden));
+
+noFillButton.addEventListener('click', function () {
+    setFill(null);
+    commit();
+    setPopover(paletteMenu, null, false);
+});
+
+paletteMenu.addEventListener('click', function (e) {
+    const chip = e.target.closest('[data-color]');
+    if (chip) {
+        applyPaletteColor(chip.dataset.color);
+    }
+});
+
+// Dropping picture files onto the board, or choosing them with the Image button.
+function draggingFiles(e) {
+    return [...e.dataTransfer.types].includes('Files');
+}
+
+board.addEventListener('dragover', function (e) {
+    if (draggingFiles(e)) {
+        e.preventDefault();
+        board.classList.add('drop-target');
+    }
+});
+
+board.addEventListener('dragleave', function (e) {
+    if (!board.contains(e.relatedTarget)) {
+        board.classList.remove('drop-target');
+    }
+});
+
+board.addEventListener('drop', function (e) {
+    board.classList.remove('drop-target');
+    if (draggingFiles(e)) {
+        e.preventDefault();
+        addImageFiles(e.dataTransfer.files, screenPoint(e));
+    }
+});
+
+// A file dropped just outside the board shouldn't make the browser navigate away from it.
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => e.preventDefault());
+
+document.getElementById('add-image-btn').addEventListener('click', () => imageInput.click());
+
+imageInput.addEventListener('change', function () {
+    addImageFiles(this.files, null);
+    this.value = '';
+});
 
 brushSizeInput.addEventListener('input', function () {
     brushValue.textContent = this.value;
@@ -273,9 +349,7 @@ document.addEventListener('pointerdown', function (e) {
     if (!exportMenu.hidden && !e.target.closest('.export-wrap')) {
         setExportMenu(false);
     }
-    if (!alignMenu.hidden && !e.target.closest('#align-menu, #align-btn')) {
-        setAlignMenu(false);
-    }
+    closePopoversOutside(e.target);
 });
 
 alignButton.addEventListener('click', () => setAlignMenu(alignMenu.hidden));
@@ -293,6 +367,7 @@ toolButtons.forEach((button) => {
 });
 
 document.getElementById('add-text-btn').addEventListener('click', addTextBox);
+document.getElementById('add-note-btn').addEventListener('click', addNote);
 document.getElementById('font-down').addEventListener('click', () => stepFontSize(-1));
 document.getElementById('font-up').addEventListener('click', () => stepFontSize(1));
 zoomInButton.addEventListener('click', () => stepZoom(1));

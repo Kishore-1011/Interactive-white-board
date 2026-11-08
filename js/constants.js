@@ -44,7 +44,42 @@ const ROTATE_SNAP = 15;
 const ROTATE_HANDLE_ROOM = 34;
 const PASTE_OFFSET = 24;
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
-const DRAWING_TYPES = ['pen', 'line', 'rectangle', 'ellipse'];
+const DRAWING_TYPES = ['pen', 'line', 'arrow', 'rectangle', 'ellipse'];
+const FILLABLE_TYPES = ['rectangle', 'ellipse'];
+const ASSETS_STORAGE_KEY = 'interactive-white-board:assets';
+const RECENT_COLORS_STORAGE_KEY = 'interactive-white-board:recent-colors';
+const ATTACH_MARGIN = 8;
+const ATTACH_GAP = 6;
+const ARROW_HEAD_MIN = 12;
+const ARROW_HEAD_SCALE = 3.5;
+const ARROW_HEAD_ANGLE = 0.45;
+const NOTE_SIZE = 200;
+const NOTE_FILL = '#fef08a';
+const NOTE_TEXT_COLOR = '#1c1c21';
+const NOTE_PADDING = 14;
+const MIN_NOTE_SIZE = 60;
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const IMAGE_MAX_BYTES = 20 * 1024 * 1024;
+const IMAGE_MAX_SIZE = 1600;
+const IMAGE_QUALITY = 0.85;
+const IMAGE_PLACE_SIZE = 480;
+const IMAGE_VIEW_SHARE = 0.6;
+const ASSET_PATTERN = /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i;
+const MAX_RECENT_COLORS = 8;
+const TEXT_ALIGNMENTS = ['left', 'center', 'right'];
+const FONTS = {
+    sans: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    serif: 'Georgia, Cambria, "Times New Roman", serif',
+    mono: 'Consolas, Menlo, Monaco, "Courier New", monospace',
+    hand: '"Segoe Print", "Bradley Hand", "Comic Sans MS", cursive',
+    display: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif',
+};
+const PRESET_COLORS = [
+    '#000000', '#475569', '#94a3b8', '#ffffff',
+    '#dc2626', '#ea580c', '#f59e0b', '#fef08a',
+    '#16a34a', '#0d9488', '#2563eb', '#4f46e5',
+    '#7c3aed', '#c026d3', '#db2777', '#92400e',
+];
 const HANDLE_VECTORS = {
     nw: [-1, -1], n: [0, -1], ne: [1, -1], e: [1, 0],
     se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0],

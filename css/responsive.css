@@ -43,10 +43,15 @@
     .tool-rail {
         order: 2;
         flex-direction: row;
-        justify-content: space-between;
+        justify-content: flex-start;
+        overflow-x: auto;
         padding: 4px 6px;
         border-top: 1px solid var(--border);
         border-right: 0;
+    }
+
+    .tool-rail .icon-btn {
+        flex-shrink: 0;
     }
 
     .rail-divider {

@@ -21,17 +21,22 @@ function continueMove(e) {
     if (!gesture.moved && Math.hypot(rawX, rawY) < DRAG_THRESHOLD) {
         return;
     }
+    if (!gesture.moved) {
+        detachSelectedArrows();
+    }
     gesture.moved = true;
     const snapped = snapMove(gesture.bounds, rawX / camera.zoom, rawY / camera.zoom, gesture.targets, e);
     gesture.starts.forEach(({ item, start }) => {
         moveItem(item, start, snapped.dx, snapped.dy);
         renderItem(item);
     });
+    refreshArrows();
     drawGuides(snapped.guides);
     updateFrame();
 }
 
 function startResize(e, handle) {
+    detachSelectedArrows();
     const selected = selectedItems();
     const frame = currentFrame();
     const [hx, hy] = HANDLE_VECTORS[handle];
@@ -42,8 +47,9 @@ function startResize(e, handle) {
         hy,
         frame,
         centre: boxCentre(frame),
-        uniform: !single || (isText(single) && hx !== 0 && hy !== 0),
-        textWidth: Boolean(single && isText(single) && hy === 0),
+        uniform: !single || isImage(single) || (isText(single) && !single.note && hx !== 0 && hy !== 0),
+        textWidth: Boolean(single && isText(single) && !single.note && hy === 0),
+        minSize: single && single.note ? MIN_NOTE_SIZE : MIN_RESIZE,
         targets: snapTargets(),
         starts: selected.map((item) => {
             const box = itemBox(item);
@@ -54,7 +60,22 @@ function startResize(e, handle) {
 
 function resizeItem(entry, itemCentre, sx, sy) {
     const { item, start, box, centre } = entry;
-    if (isText(item)) {
+    if (isImage(item) || item.note) {
+        const width = box.w * sx;
+        const height = box.h * sy;
+        item.x = round(itemCentre.x - width / 2);
+        item.y = round(itemCentre.y - height / 2);
+        if (isImage(item)) {
+            item.w = round(width);
+            item.h = round(height);
+        } else {
+            item.width = round(width);
+            item.height = round(height);
+            if (gesture.uniform) {
+                item.fontSize = round(start.fontSize * sx); // In a group, a note's text scales with it.
+            }
+        }
+    } else if (isText(item)) {
         const { min, max } = fontSizeLimits();
         const fontSize = Math.min(max, Math.max(min, start.fontSize * sx));
         const scale = fontSize / start.fontSize;
@@ -86,9 +107,9 @@ function continueResize(e) {
     const localX = local.x - centre.x;
     const localY = local.y - centre.y;
 
-    const minWidth = gesture.textWidth ? MIN_TEXT_WIDTH : MIN_RESIZE;
+    const minWidth = gesture.textWidth ? MIN_TEXT_WIDTH : gesture.minSize;
     let newW = hx && frame.w >= FLAT_SIZE ? Math.max(minWidth, hx * (localX - anchorX)) : frame.w;
-    let newH = hy && frame.h >= FLAT_SIZE ? Math.max(MIN_RESIZE, hy * (localY - anchorY)) : frame.h;
+    let newH = hy && frame.h >= FLAT_SIZE ? Math.max(gesture.minSize, hy * (localY - anchorY)) : frame.h;
     let sx = frame.w >= FLAT_SIZE ? newW / frame.w : 1;
     let sy = frame.h >= FLAT_SIZE ? newH / frame.h : 1;
 
@@ -121,6 +142,7 @@ function continueResize(e) {
         }
         renderItem(entry.item);
     });
+    refreshArrows();
     drawGuides(canSnap ? resizeGuides(newCentre, newW, newH) : []);
     updateFrame();
 }
@@ -130,6 +152,7 @@ function pointerAngle(point, centre) {
 }
 
 function startRotate(e) {
+    detachSelectedArrows();
     const selected = selectedItems();
     const frame = currentFrame();
     const centre = boxCentre(frame);
@@ -157,6 +180,7 @@ function continueRotate(e) {
         item.rotation = normaliseAngle(start.rotation + delta);
         renderItem(item);
     });
+    refreshArrows();
     updateFrame();
 }
 

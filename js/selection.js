@@ -14,17 +14,25 @@ function expandGroups(ids) {
 function syncControls() {
     const selected = selectedItems();
     const text = selected.find(isText);
-    const drawing = selected.find((item) => !isText(item));
+    const drawing = selected.find(isDrawing);
+    const coloured = selected.find((item) => !isImage(item));
     if (text) {
         fontSizeInput.value = Math.round(text.fontSize);
+        updateTextStyleButtons(text);
     }
     if (drawing) {
         brushSizeInput.value = drawing.strokeWidth;
         brushValue.textContent = drawing.strokeWidth;
     }
-    if (selected.length > 0) {
-        colorInput.value = selected[0].color;
+    if (coloured) {
+        colorInput.value = coloured.color;
     }
+    if (selected.length > 0) {
+        const percent = Math.round(selected[0].opacity * 100);
+        opacityInput.value = percent;
+        opacityValue.textContent = `${percent}%`;
+    }
+    updateSwatches();
 }
 
 function select(ids) {
@@ -49,7 +57,7 @@ function setTool(name) {
     updateContextBar();
 }
 
-function addTextBox() {
+function addTextItem(overrides) {
     setTool('select');
     const offset = CASCADE_START + (cascade++ % CASCADE_LENGTH) * CASCADE_STEP;
     const position = screenToBoard({ x: offset, y: offset }); // Always lands where you're looking.
@@ -60,15 +68,40 @@ function addTextBox() {
         x: round(position.x),
         y: round(position.y),
         width: null,
+        height: null,
         fontSize: Number(fontSizeInput.value),
+        fontFamily: 'sans',
+        bold: false,
+        align: 'left',
         color: colorInput.value,
+        fill: null,
+        note: false,
+        opacity: 1,
         rotation: 0,
         locked: false,
         groupId: null,
+        ...overrides,
     };
     items.push(item);
     selectedIds = [item.id];
     commit();
+    syncControls();
+}
+
+function addTextBox() {
+    addTextItem({});
+}
+
+function addNote() {
+    addTextItem({
+        text: 'New note',
+        width: NOTE_SIZE,
+        height: NOTE_SIZE,
+        fontSize: 20,
+        color: NOTE_TEXT_COLOR,
+        fill: NOTE_FILL,
+        note: true,
+    });
 }
 
 function deleteSelected() {
@@ -104,7 +137,7 @@ function setFontSize(size) {
 
 function setStrokeWidth(width) {
     updateSelected((item) => {
-        if (!isText(item)) {
+        if (isDrawing(item)) {
             item.strokeWidth = width;
         }
     });
@@ -174,6 +207,7 @@ function toggleLock() {
 // Add copies of these items, offset so they're visible, and select them.
 function insertCopies(source, offset) {
     const groupMap = new Map();
+    const idMap = new Map();
     const copies = clone(source).map((item) => {
         if (item.groupId !== null) {
             if (!groupMap.has(item.groupId)) {
@@ -181,9 +215,16 @@ function insertCopies(source, offset) {
             }
             item.groupId = groupMap.get(item.groupId);
         }
-        item.id = newId();
+        const copyId = newId();
+        idMap.set(item.id, copyId);
+        item.id = copyId;
         moveItem(item, clone(item), offset, offset);
         return item;
+    });
+    // A copied arrow stays attached only to objects that were copied along with it.
+    copies.filter((item) => item.type === 'arrow').forEach((arrow) => {
+        arrow.startId = idMap.get(arrow.startId) || null;
+        arrow.endId = idMap.get(arrow.endId) || null;
     });
     items.push(...copies);
     selectedIds = copies.map((item) => item.id);

@@ -8,6 +8,14 @@ function createItemElement(item) {
         element.contentEditable = 'false';
         return element;
     }
+    if (isImage(item)) {
+        element.className = 'item item-image';
+        const image = document.createElement('img');
+        image.alt = '';
+        image.draggable = false;
+        element.appendChild(image);
+        return element;
+    }
     element.className = 'item item-drawing';
     const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
     svg.setAttribute('aria-hidden', 'true');
@@ -25,6 +33,7 @@ function createItemElement(item) {
 function renderItem(item) {
     const element = elements.get(item.id);
     element.classList.toggle('locked', item.locked);
+    element.style.opacity = item.opacity < 1 ? item.opacity : '';
 
     if (isText(item)) {
         if (item.id !== editingId && element.innerText !== item.text) {
@@ -32,14 +41,32 @@ function renderItem(item) {
         }
         element.style.fontSize = item.fontSize + 'px';
         element.style.color = item.color;
+        element.style.fontFamily = FONTS[item.fontFamily];
+        element.style.fontWeight = item.bold ? '700' : '';
+        element.style.textAlign = item.align;
+        element.style.background = item.fill || '';
+        element.style.height = item.height === null ? '' : item.height + 'px';
+        element.classList.toggle('note', item.note);
         element.style.width = item.width === null ? '' : item.width + 'px';
         element.style.maxWidth = item.width === null ? MAX_TEXT_WIDTH + 'px' : '';
         element.style.left = item.x + 'px';
         element.style.top = item.y + 'px';
+    } else if (isImage(item)) {
+        const image = element.firstChild;
+        const source = assets.get(item.assetId) || '';
+        if (image.getAttribute('src') !== source) {
+            image.setAttribute('src', source);
+        }
+        element.style.left = item.x + 'px';
+        element.style.top = item.y + 'px';
+        element.style.width = item.w + 'px';
+        element.style.height = item.h + 'px';
     } else {
         const box = pointsBox(item.points);
         const data = pathData(item);
         const [ink, hit] = element.querySelectorAll('path');
+        ink.style.fill = item.fill || 'none';
+        element.classList.toggle('filled', Boolean(item.fill));
         element.querySelector('g').setAttribute('transform', `translate(${-box.x} ${-box.y})`);
         ink.setAttribute('d', data);
         ink.setAttribute('stroke', item.color);
@@ -69,6 +96,7 @@ function render() {
         }
         renderItem(item);
     });
+    refreshArrows();
     stale.forEach((element, id) => {
         element.remove();
         elements.delete(id);
@@ -98,7 +126,11 @@ function frameMode() {
     if (selected.length > 1) {
         return 'uniform';
     }
-    return isText(selected[0]) ? 'text' : 'free';
+    const [item] = selected;
+    if (isImage(item)) {
+        return 'uniform';
+    }
+    return isText(item) && !item.note ? 'text' : 'free';
 }
 
 function updateFrame() {
@@ -175,6 +207,9 @@ function updateContextBar() {
         tags.add('eraser');
     } else if (DRAWING_TYPES.includes(tool)) {
         tags.add('draw');
+        if (FILLABLE_TYPES.includes(tool)) {
+            tags.add('fillable');
+        }
     } else if (selected.length > 0) {
         if (selectionLocked()) {
             tags.add('locked');
@@ -186,8 +221,14 @@ function updateContextBar() {
             if (selected.some(isText)) {
                 tags.add('text');
             }
-            if (selected.some((item) => !isText(item))) {
+            if (selected.some(isDrawing)) {
                 tags.add('stroke');
+            }
+            if (selected.some((item) => !isImage(item))) {
+                tags.add('colorable');
+            }
+            if (selected.some(isFillable)) {
+                tags.add('fillable');
             }
             if (selected.length === 1 && isText(selected[0])) {
                 tags.add('single-text');
@@ -205,6 +246,7 @@ function updateContextBar() {
 
 function save(json) {
     try {
+        persistAssets(); // Images first, so a saved board never points at missing pictures.
         localStorage.setItem(STORAGE_KEY, json);
         setSaveState(true);
     } catch (error) {

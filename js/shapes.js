@@ -12,6 +12,16 @@ function pathData(item) {
         const [start, end] = item.points;
         return `M${start.x} ${start.y}L${end.x} ${end.y}`;
     }
+    if (item.type === 'arrow') {
+        const [start, end] = item.points;
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const size = Math.max(ARROW_HEAD_MIN, item.strokeWidth * ARROW_HEAD_SCALE);
+        const barb = (side) => {
+            const barbAngle = angle + Math.PI - side * ARROW_HEAD_ANGLE;
+            return `${round(end.x + size * Math.cos(barbAngle))} ${round(end.y + size * Math.sin(barbAngle))}`;
+        };
+        return `M${start.x} ${start.y}L${end.x} ${end.y}M${barb(1)}L${end.x} ${end.y}L${barb(-1)}`;
+    }
     const box = pointsBox(item.points);
     if (item.type === 'rectangle') {
         return `M${box.x} ${box.y}H${box.x + box.w}V${box.y + box.h}H${box.x}Z`;
@@ -73,7 +83,7 @@ function eraseBetween(from, to) {
         x: from.x + ((to.x - from.x) * i) / steps,
         y: from.y + ((to.y - from.y) * i) / steps,
     }));
-    const remaining = items.filter((item) => isText(item) || item.locked
+    const remaining = items.filter((item) => !isDrawing(item) || item.locked
         || !probes.some((probe) => isHit(item, probe)));
     if (remaining.length !== items.length) {
         items = remaining;
@@ -94,10 +104,15 @@ function startDrawing(e) {
         points: tool === 'pen' ? [point] : [snapDrawPoint(point, e), snapDrawPoint(point, e)],
         color: colorInput.value,
         strokeWidth: Number(brushSizeInput.value),
+        fill: FILLABLE_TYPES.includes(tool) ? currentFill : null,
+        opacity: 1,
         rotation: 0,
         locked: false,
         groupId: null,
     };
+    if (tool === 'arrow') {
+        beginArrow(activeDrawing, point);
+    }
     items.push(activeDrawing);
     render();
 }
@@ -116,12 +131,19 @@ function continueDrawing(e) {
         }
     } else {
         activeDrawing.points[1] = snapDrawPoint(point, e);
+        if (activeDrawing.type === 'arrow') {
+            updateArrowEnd(activeDrawing, point);
+        }
     }
     renderItem(activeDrawing);
 }
 
 function finishDrawing() {
-    if (activeDrawing && activeDrawing.type !== 'pen') {
+    if (activeDrawing && activeDrawing.type === 'arrow') {
+        if (!finishArrow()) {
+            items.pop();
+        }
+    } else if (activeDrawing && activeDrawing.type !== 'pen') {
         const [start, end] = activeDrawing.points;
         if (distance(start, end) === 0) {
             items.pop(); // A shape needs a size; a tap alone draws nothing.

@@ -6,6 +6,8 @@ updateThemeButton();
 loadView();
 loadSettings();
 drawSettings();
+loadRecentColors();
+buildPalette();
 render();
 drawCamera(false);
 undoStack = [snapshot()];
