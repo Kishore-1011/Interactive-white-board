@@ -19,9 +19,13 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 - **Named boards:** give the board a name and exported files use it
 - **Drawing tools:** pen, line, rectangle and ellipse, with a colour picker and brush size
 - **Eraser:** removes any stroke or shape it touches
-- **Text boxes:** drag them anywhere, double-click to edit, and set size and colour per box
-- **Layering:** bring a text box to the front
-- **Undo and redo:** up to 100 steps, covering drawing, moving, typing and styling
+- **Text:** double-click to edit, drag a corner to scale it, or drag a side to set where it wraps
+- **Direct editing:** click anything to move, resize or rotate it with handles
+- **Multiple selection:** drag across the board or Shift-click to work on several objects at once
+- **Groups and locks:** group objects so they move together, and lock anything you don't want disturbed
+- **Layers:** move any object forward, backward, to the front or to the back
+- **Duplicate, copy and paste:** works on single objects and whole groups
+- **Undo and redo:** up to 100 steps, covering every change to the board
 - **Autosave:** the board is restored when you come back, using your browser's local storage
 - **Export and open:** save the board as a PNG image, or as a JSON file you can open again later
 - **Mouse and touch:** works with a mouse, a stylus or a finger, on phones as well as large screens
@@ -32,7 +36,15 @@ A whiteboard that runs entirely in the browser. Sketch with a pen or shapes, pla
 |---|---|
 | <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo |
 | <kbd>Ctrl</kbd> + <kbd>Y</kbd> or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Redo |
-| <kbd>Delete</kbd> or <kbd>Backspace</kbd> | Delete the selected text box |
+| <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>X</kbd> / <kbd>V</kbd> | Copy, cut, paste |
+| <kbd>Ctrl</kbd> + <kbd>D</kbd> | Duplicate |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> | Select everything that isn't locked |
+| <kbd>Ctrl</kbd> + <kbd>G</kbd> | Group |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd> | Ungroup |
+| <kbd>Ctrl</kbd> + <kbd>]</kbd> / <kbd>[</kbd> | Bring to front, send to back |
+| <kbd>Shift</kbd> while resizing | Keep proportions |
+| <kbd>Shift</kbd> while rotating | Snap to 15° steps |
+| <kbd>Delete</kbd> or <kbd>Backspace</kbd> | Delete the selection |
 | <kbd>Esc</kbd> | Finish editing, or deselect |
 
 ## Run it
@@ -47,15 +59,15 @@ Then visit http://localhost:8000. There's no build step and nothing to install, 
 
 ## How it works
 
-The board is stored as plain data: a list of text boxes and a list of drawings. Everything on screen is drawn from that data, with drawings on a `<canvas>` and text boxes as elements layered above it. Each change saves a snapshot of the data, which is what powers undo, redo, autosave and JSON export.
+The board is stored as plain data: one list of objects, ordered from back to front. Each object is drawn as its own element, using SVG for shapes and HTML for text, so the browser handles clicking on the exact stroke. Each change saves a snapshot of the list, which is what powers undo, redo, autosave and JSON export.
 
 ## Project structure
 
 ```
 Interactive-white-board/
-├── index.html    # Editor layout, icons, canvas and text layer
+├── index.html    # Editor layout, icons and selection handles
 ├── style.css     # Themes, editor layout and responsive rules
-├── script.js     # Board data, drawing, text boxes, undo and saving
+├── script.js     # Board data, editing, undo and saving
 └── docs/         # Screenshot for this README
 ```
 
