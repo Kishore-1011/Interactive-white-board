@@ -1,0 +1,252 @@
+/* Right-click menu, dialogs and the empty board */
+
+.context-menu {
+    position: fixed;
+    z-index: 60;
+    min-width: 210px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--chrome);
+    box-shadow: var(--shadow);
+}
+
+.context-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    text-align: left;
+}
+
+.context-item:hover:not(:disabled),
+.context-item:focus-visible {
+    background: var(--hover);
+}
+
+.context-item:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.context-item.danger {
+    color: var(--danger);
+}
+
+.context-item kbd,
+.shortcut-list kbd {
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.menu-divider {
+    height: 1px;
+    margin: 5px 4px;
+    border: 0;
+    background: var(--border);
+}
+
+.dialog {
+    width: min(640px, calc(100vw - 32px));
+    max-height: min(680px, calc(100dvh - 32px));
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--chrome);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+.dialog-wide {
+    width: min(820px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+    background: rgb(10 10 20 / 45%);
+}
+
+.dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.dialog-head h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.shortcut-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.shortcut-groups h3 {
+    margin: 0 0 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.shortcut-list {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    margin: 0;
+}
+
+.shortcut-list dt {
+    font-weight: 400;
+}
+
+.shortcut-list dd {
+    margin: 0;
+    text-align: right;
+}
+
+.board-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.board-open {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    text-align: left;
+}
+
+.board-open:hover {
+    background: var(--hover);
+}
+
+.board-open strong,
+.board-open span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.board-open span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.board-delete {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--danger);
+    font-size: 12px;
+}
+
+.board-delete:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.template-card {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    text-align: left;
+}
+
+.template-card:hover {
+    border-color: var(--accent);
+    background: var(--hover);
+}
+
+.template-card svg {
+    display: block;
+    width: 100%;
+    height: 110px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background: #ffffff;
+}
+
+.template-card strong,
+.template-card span {
+    display: block;
+}
+
+.template-card span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(380px, calc(100% - 32px));
+    color: #475569;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.empty-state h2 {
+    margin: 0 0 4px;
+    color: #1c1c21;
+    font-size: 20px;
+}
+
+.empty-state p {
+    margin: 0 0 14px;
+}
+
+.empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.empty-actions button {
+    padding: 7px 12px;
+    border: 1px solid #d4d4dc;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1c1c21;
+    font-weight: 600;
+    pointer-events: auto;
+}
+
+.empty-actions button:hover {
+    border-color: #4f46e5;
+}
+
+.show-on-phone {
+    display: none;
+}

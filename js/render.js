@@ -101,6 +101,7 @@ function render() {
         element.remove();
         elements.delete(id);
     });
+    updateEmptyState();
     updateSelectionStyles();
 }
 
@@ -266,6 +267,7 @@ function commit() {
         }
         undoIndex = undoStack.length - 1;
         save(json);
+        touchCurrentBoard();
     }
     updateButtons();
 }

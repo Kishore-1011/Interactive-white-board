@@ -10,6 +10,7 @@ function storeBoardName() {
     } catch (error) {
         setSaveState(false);
     }
+    renameCurrentBoard(boardName());
 }
 
 function setBoardName(name) {

@@ -43,8 +43,9 @@
     .tool-rail {
         order: 2;
         flex-direction: row;
-        justify-content: flex-start;
-        overflow-x: auto;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom));
         padding: 4px 6px;
         border-top: 1px solid var(--border);
         border-right: 0;
@@ -52,6 +53,19 @@
 
     .tool-rail .icon-btn {
         flex-shrink: 0;
+    }
+
+    .show-on-phone {
+        display: inline-flex;
+    }
+
+    .hide-on-phone {
+        display: none;
+    }
+
+    /* Less-used tools fold away behind the More button. */
+    .tool-rail:not(.expanded) .rail-secondary {
+        display: none;
     }
 
     .rail-divider {

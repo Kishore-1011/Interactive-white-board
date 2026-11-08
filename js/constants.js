@@ -48,6 +48,15 @@ const DRAWING_TYPES = ['pen', 'line', 'arrow', 'rectangle', 'ellipse'];
 const FILLABLE_TYPES = ['rectangle', 'ellipse'];
 const ASSETS_STORAGE_KEY = 'interactive-white-board:assets';
 const RECENT_COLORS_STORAGE_KEY = 'interactive-white-board:recent-colors';
+const BOARDS_STORAGE_KEY = 'interactive-white-board:boards';
+const PARKED_BOARD_PREFIX = 'interactive-white-board:parked:';
+const ACTIVE_BOARD_KEYS = [STORAGE_KEY, ASSETS_STORAGE_KEY, NAME_STORAGE_KEY, VIEW_STORAGE_KEY];
+const PDF_PAGE_SIZE = 842;
+const PDF_JPEG_QUALITY = 0.92;
+const SECONDARY_TOOLS = ['line', 'arrow', 'rectangle', 'ellipse'];
+const TOOL_KEYS = {
+    v: 'select', h: 'hand', p: 'pen', e: 'eraser', l: 'line', a: 'arrow', r: 'rectangle', o: 'ellipse',
+};
 const ATTACH_MARGIN = 8;
 const ATTACH_GAP = 6;
 const ARROW_HEAD_MIN = 12;

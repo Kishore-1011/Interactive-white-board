@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="A whiteboard in the browser: draw, add text, undo, autosave and export to PNG.">
     <title>Interactive White Board</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234f46e5'/><path d='M7 17l1-3.5 7.5-7.5 2.5 2.5-7.5 7.5z' fill='white'/></svg>">
@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="css/board.css">
     <link rel="stylesheet" href="css/panels.css">
     <link rel="stylesheet" href="css/tooltips.css">
+    <link rel="stylesheet" href="css/dialogs.css">
     <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -77,12 +78,16 @@
     <symbol id="i-text-center" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M6 12h12"/><path d="M4 18h16"/></symbol>
     <symbol id="i-text-right" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M9 12h12"/><path d="M5 18h16"/></symbol>
     <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></symbol>
+    <symbol id="i-boards" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
     <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
 </svg>
 
 <header class="topbar">
     <div class="topbar-left">
         <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg></span>
+        <button id="boards-btn" type="button" class="icon-btn" aria-label="Your boards" data-tip="Your boards"><svg class="icon"><use href="#i-boards"/></svg></button>
         <input id="board-name" class="board-name" type="text" maxlength="60" value="Untitled board"
                autocomplete="off" spellcheck="false" aria-label="Board name">
         <span id="save-state" class="save-state" role="status">
@@ -97,6 +102,7 @@
     </div>
 
     <div class="topbar-right">
+        <button id="help-btn" type="button" class="icon-btn hide-on-phone" aria-label="Keyboard shortcuts" data-tip="Shortcuts (?)"><svg class="icon"><use href="#i-help"/></svg></button>
         <button id="theme-btn" type="button" class="icon-btn" aria-label="Switch theme" data-tip="Switch theme">
             <svg class="icon show-in-dark"><use href="#i-sun"/></svg>
             <svg class="icon show-in-light"><use href="#i-moon"/></svg>
@@ -116,6 +122,9 @@
                 <button id="export-json-btn" type="button" class="menu-item">
                     <strong>JSON file</strong><span>Keep it editable and open it later</span>
                 </button>
+                <button id="export-pdf-btn" type="button" class="menu-item">
+                    <strong>PDF document</strong><span>A one-page document to send or print</span>
+                </button>
             </div>
         </div>
         <input type="file" id="import-input" accept="application/json,.json" hidden>
@@ -125,20 +134,21 @@
 
 <div class="workspace">
     <nav class="tool-rail" aria-label="Tools">
-        <button type="button" class="icon-btn tool-btn" data-tool="select" aria-label="Select" data-tip="Select and move"><svg class="icon"><use href="#i-select"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="hand" aria-label="Pan" data-tip="Pan (hold Space)"><svg class="icon"><use href="#i-pan"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="pen" aria-label="Pen" data-tip="Pen"><svg class="icon"><use href="#i-pen"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="eraser" aria-label="Eraser" data-tip="Eraser"><svg class="icon"><use href="#i-eraser"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="select" aria-label="Select" data-tip="Select (V)"><svg class="icon"><use href="#i-select"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="hand" aria-label="Pan" data-tip="Pan (H, or hold Space)"><svg class="icon"><use href="#i-pan"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="pen" aria-label="Pen" data-tip="Pen (P)"><svg class="icon"><use href="#i-pen"/></svg></button>
+        <button type="button" class="icon-btn tool-btn" data-tool="eraser" aria-label="Eraser" data-tip="Eraser (E)"><svg class="icon"><use href="#i-eraser"/></svg></button>
         <span class="rail-divider" aria-hidden="true"></span>
-        <button id="add-text-btn" type="button" class="icon-btn" aria-label="Add text" data-tip="Add text"><svg class="icon"><use href="#i-text"/></svg></button>
-        <button id="add-note-btn" type="button" class="icon-btn" aria-label="Add sticky note" data-tip="Sticky note"><svg class="icon"><use href="#i-note"/></svg></button>
-        <button id="add-image-btn" type="button" class="icon-btn" aria-label="Add image" data-tip="Image"><svg class="icon"><use href="#i-image"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="line" aria-label="Line" data-tip="Line"><svg class="icon"><use href="#i-line"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="arrow" aria-label="Arrow" data-tip="Arrow"><svg class="icon"><use href="#i-arrow"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="rectangle" aria-label="Rectangle" data-tip="Rectangle"><svg class="icon"><use href="#i-rectangle"/></svg></button>
-        <button type="button" class="icon-btn tool-btn" data-tool="ellipse" aria-label="Ellipse" data-tip="Ellipse"><svg class="icon"><use href="#i-ellipse"/></svg></button>
+        <button id="add-text-btn" type="button" class="icon-btn" aria-label="Add text" data-tip="Text (T)"><svg class="icon"><use href="#i-text"/></svg></button>
+        <button id="add-note-btn" type="button" class="icon-btn" aria-label="Add sticky note" data-tip="Sticky note (N)"><svg class="icon"><use href="#i-note"/></svg></button>
+        <button id="add-image-btn" type="button" class="icon-btn rail-secondary" aria-label="Add image" data-tip="Image (I)"><svg class="icon"><use href="#i-image"/></svg></button>
+        <button type="button" class="icon-btn tool-btn rail-secondary" data-tool="line" aria-label="Line" data-tip="Line (L)"><svg class="icon"><use href="#i-line"/></svg></button>
+        <button type="button" class="icon-btn tool-btn rail-secondary" data-tool="arrow" aria-label="Arrow" data-tip="Arrow (A)"><svg class="icon"><use href="#i-arrow"/></svg></button>
+        <button type="button" class="icon-btn tool-btn rail-secondary" data-tool="rectangle" aria-label="Rectangle" data-tip="Rectangle (R)"><svg class="icon"><use href="#i-rectangle"/></svg></button>
+        <button type="button" class="icon-btn tool-btn rail-secondary" data-tool="ellipse" aria-label="Ellipse" data-tip="Ellipse (O)"><svg class="icon"><use href="#i-ellipse"/></svg></button>
         <span class="rail-spacer" aria-hidden="true"></span>
-        <button id="clear-btn" type="button" class="icon-btn" aria-label="Clear board" data-tip="Clear board"><svg class="icon"><use href="#i-clear"/></svg></button>
+        <button id="more-tools-btn" type="button" class="icon-btn show-on-phone" aria-label="More tools" aria-expanded="false"><svg class="icon"><use href="#i-more"/></svg></button>
+        <button id="clear-btn" type="button" class="icon-btn rail-secondary" aria-label="Clear board" data-tip="Clear board"><svg class="icon"><use href="#i-clear"/></svg></button>
     </nav>
 
     <main class="stage">
@@ -225,6 +235,15 @@
         </div>
 
         <div id="white-board">
+            <div id="empty-state" class="empty-state">
+                <h2>Your board is empty</h2>
+                <p>Pick a tool on the left, drop in a picture, or start with one of these.</p>
+                <div class="empty-actions">
+                    <button id="empty-note-btn" type="button">Sticky note</button>
+                    <button id="empty-text-btn" type="button">Text</button>
+                    <button id="empty-templates-btn" type="button">Templates</button>
+                </div>
+            </div>
             <div id="item-layer"></div>
             <div id="selection-layer">
                 <div id="guide-layer"></div>
@@ -257,6 +276,85 @@
     </main>
 </div>
 
+<div id="context-menu" class="context-menu" role="menu" hidden></div>
+
+<dialog id="boards-dialog" class="dialog" aria-labelledby="boards-title">
+    <div class="dialog-head">
+        <h2 id="boards-title">Your boards</h2>
+        <button type="button" class="icon-btn icon-btn-small" aria-label="Close" data-close-dialog><svg class="icon icon-small"><use href="#i-clear"/></svg></button>
+    </div>
+    <div class="dialog-actions">
+        <button id="new-board-btn" type="button" class="primary-btn">New board</button>
+        <button id="board-templates-btn" type="button" class="text-btn">From a template</button>
+    </div>
+    <div id="boards-list"></div>
+</dialog>
+
+<dialog id="templates-dialog" class="dialog dialog-wide" aria-labelledby="templates-title">
+    <div class="dialog-head">
+        <h2 id="templates-title">Start from a template</h2>
+        <button type="button" class="icon-btn icon-btn-small" aria-label="Close" data-close-dialog><svg class="icon icon-small"><use href="#i-clear"/></svg></button>
+    </div>
+    <div id="templates-list" class="template-grid"></div>
+</dialog>
+
+<dialog id="help-dialog" class="dialog dialog-wide" aria-labelledby="help-title">
+    <div class="dialog-head">
+        <h2 id="help-title">Keyboard shortcuts</h2>
+        <button type="button" class="icon-btn icon-btn-small" aria-label="Close" data-close-dialog><svg class="icon icon-small"><use href="#i-clear"/></svg></button>
+    </div>
+    <div class="shortcut-groups">
+        <section>
+            <h3>Tools</h3>
+            <dl class="shortcut-list">
+                <dt>Select</dt><dd><kbd>V</kbd></dd>
+                <dt>Pan</dt><dd><kbd>H</kbd> or hold <kbd>Space</kbd></dd>
+                <dt>Pen</dt><dd><kbd>P</kbd></dd>
+                <dt>Eraser</dt><dd><kbd>E</kbd></dd>
+                <dt>Line</dt><dd><kbd>L</kbd></dd>
+                <dt>Arrow</dt><dd><kbd>A</kbd></dd>
+                <dt>Rectangle</dt><dd><kbd>R</kbd></dd>
+                <dt>Ellipse</dt><dd><kbd>O</kbd></dd>
+                <dt>Add text</dt><dd><kbd>T</kbd></dd>
+                <dt>Add sticky note</dt><dd><kbd>N</kbd></dd>
+                <dt>Add image</dt><dd><kbd>I</kbd></dd>
+            </dl>
+        </section>
+        <section>
+            <h3>Editing</h3>
+            <dl class="shortcut-list">
+                <dt>Undo</dt><dd><kbd>Ctrl+Z</kbd></dd>
+                <dt>Redo</dt><dd><kbd>Ctrl+Y</kbd></dd>
+                <dt>Copy, cut, paste</dt><dd><kbd>Ctrl+C / X / V</kbd></dd>
+                <dt>Duplicate</dt><dd><kbd>Ctrl+D</kbd></dd>
+                <dt>Select all</dt><dd><kbd>Ctrl+A</kbd></dd>
+                <dt>Group</dt><dd><kbd>Ctrl+G</kbd></dd>
+                <dt>Ungroup</dt><dd><kbd>Ctrl+Shift+G</kbd></dd>
+                <dt>To front, to back</dt><dd><kbd>Ctrl+] / [</kbd></dd>
+                <dt>Delete</dt><dd><kbd>Del</kbd></dd>
+            </dl>
+        </section>
+        <section>
+            <h3>View</h3>
+            <dl class="shortcut-list">
+                <dt>Zoom at the pointer</dt><dd><kbd>Ctrl+scroll</kbd></dd>
+                <dt>Zoom in, out</dt><dd><kbd>Ctrl+= / -</kbd></dd>
+                <dt>Reset to 100%</dt><dd><kbd>Ctrl+0</kbd></dd>
+                <dt>Fit to screen</dt><dd><kbd>Shift+1</kbd></dd>
+            </dl>
+        </section>
+        <section>
+            <h3>While dragging</h3>
+            <dl class="shortcut-list">
+                <dt>Skip snapping</dt><dd>hold <kbd>Ctrl</kbd></dd>
+                <dt>Keep proportions</dt><dd>hold <kbd>Shift</kbd></dd>
+                <dt>Rotate in 15° steps</dt><dd>hold <kbd>Shift</kbd></dd>
+                <dt>Add to selection</dt><dd><kbd>Shift+click</kbd></dd>
+            </dl>
+        </section>
+    </div>
+</dialog>
+
 <!-- Plain scripts sharing one scope, so the page also works by double-clicking this file.
      The order matters: dom, constants and state come first, input and main come last. -->
 <script src="js/dom.js"></script>
@@ -271,6 +369,11 @@
 <script src="js/arrows.js"></script>
 <script src="js/images.js"></script>
 <script src="js/palette.js"></script>
+<script src="js/context-menu.js"></script>
+<script src="js/boards.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/dialogs.js"></script>
+<script src="js/pdf.js"></script>
 <script src="js/snapping.js"></script>
 <script src="js/camera.js"></script>
 <script src="js/preferences.js"></script>

@@ -55,6 +55,9 @@ function setTool(name) {
         button.setAttribute('aria-pressed', String(isActive));
     });
     updateContextBar();
+    updateEmptyState();
+    updateMoreToolsButton();
+    setRailExpanded(false);
 }
 
 function addTextItem(overrides) {
@@ -88,11 +91,11 @@ function addTextItem(overrides) {
     syncControls();
 }
 
-function addTextBox() {
-    addTextItem({});
+function addTextBox(position = {}) {
+    addTextItem(position);
 }
 
-function addNote() {
+function addNote(position = {}) {
     addTextItem({
         text: 'New note',
         width: NOTE_SIZE,
@@ -101,6 +104,7 @@ function addNote() {
         color: NOTE_TEXT_COLOR,
         fill: NOTE_FILL,
         note: true,
+        ...position,
     });
 }
 
@@ -205,7 +209,7 @@ function toggleLock() {
 }
 
 // Add copies of these items, offset so they're visible, and select them.
-function insertCopies(source, offset) {
+function insertCopies(source, offsetX, offsetY = offsetX) {
     const groupMap = new Map();
     const idMap = new Map();
     const copies = clone(source).map((item) => {
@@ -218,7 +222,7 @@ function insertCopies(source, offset) {
         const copyId = newId();
         idMap.set(item.id, copyId);
         item.id = copyId;
-        moveItem(item, clone(item), offset, offset);
+        moveItem(item, clone(item), offsetX, offsetY);
         return item;
     });
     // A copied arrow stays attached only to objects that were copied along with it.
@@ -247,10 +251,19 @@ function cutSelection() {
     }
 }
 
-function paste() {
-    if (clipboard.length > 0) {
+// Pastes beside the original, or centred on `point` when one is given.
+function paste(point) {
+    if (clipboard.length === 0) {
+        return;
+    }
+    setTool('select');
+    if (point) {
+        const centre = boxCentre(pointsBox(clipboard.flatMap((item) => (isDrawing(item)
+            ? item.points
+            : [{ x: item.x, y: item.y }]))));
+        insertCopies(clipboard, round(point.x - centre.x), round(point.y - centre.y));
+    } else {
         pasteCount++;
-        setTool('select');
         insertCopies(clipboard, PASTE_OFFSET * pasteCount);
     }
 }

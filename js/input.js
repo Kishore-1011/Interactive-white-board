@@ -1,6 +1,9 @@
 // --- Input ---
 
 board.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('#empty-state')) {
+        return;
+    }
     if (e.pointerType === 'touch') {
         touches.set(e.pointerId, screenPoint(e));
         if (touches.size === 2) {
@@ -71,7 +74,17 @@ board.addEventListener('mousedown', function (e) {
     }
 });
 
+board.addEventListener('contextmenu', function (e) {
+    const element = e.target.closest('.item');
+    if (element && element.dataset.id === editingId) {
+        return; // While typing, the browser's own menu offers spelling and paste.
+    }
+    e.preventDefault();
+    openContextMenu(e, element);
+});
+
 board.addEventListener('wheel', function (e) {
+    closeContextMenu();
     e.preventDefault();
     if (isInteracting() || pinch) {
         return;
@@ -147,6 +160,13 @@ board.addEventListener('focusout', function (e) {
 });
 
 document.addEventListener('keydown', function (e) {
+    if (anyDialogOpen()) {
+        return;
+    }
+    if (!contextMenu.hidden) {
+        handleContextMenuKey(e);
+        return;
+    }
     if (e.key === 'Escape' && !exportMenu.hidden) {
         setExportMenu(false);
         exportToggle.focus();
@@ -161,7 +181,7 @@ document.addEventListener('keydown', function (e) {
         }
         return;
     }
-    if (e.target.matches('input[type="number"], input[type="text"]')) {
+    if (e.target.matches('input[type="number"], input[type="text"], select')) {
         return; // Typing in a field must never trigger board shortcuts.
     }
 
@@ -181,8 +201,26 @@ document.addEventListener('keydown', function (e) {
         return;
     }
 
+    if (e.key === '?') {
+        e.preventDefault();
+        openHelp();
+        return;
+    }
+
     const key = e.key.toLowerCase();
     const command = e.ctrlKey || e.metaKey;
+    if (!command && !e.altKey && !e.shiftKey) {
+        const addShortcuts = { t: () => addTextBox(), n: () => addNote(), i: () => imageInput.click() };
+        if (TOOL_KEYS[key]) {
+            setTool(TOOL_KEYS[key]);
+            return;
+        }
+        if (addShortcuts[key]) {
+            e.preventDefault(); // Otherwise the letter could land in the new text.
+            addShortcuts[key]();
+            return;
+        }
+    }
     const shortcuts = {
         z: () => (e.shiftKey ? redo() : undo()),
         y: redo,
@@ -265,6 +303,7 @@ fontFamilySelect.addEventListener('change', function () {
     setTextStyle((item) => {
         item.fontFamily = fontFamily;
     });
+    this.blur(); // Hands the keyboard back to the board.
 });
 
 boldButton.addEventListener('click', toggleBold);
@@ -350,6 +389,9 @@ document.addEventListener('pointerdown', function (e) {
         setExportMenu(false);
     }
     closePopoversOutside(e.target);
+    if (!contextMenu.hidden && !e.target.closest('#context-menu')) {
+        closeContextMenu();
+    }
 });
 
 alignButton.addEventListener('click', () => setAlignMenu(alignMenu.hidden));
@@ -366,8 +408,30 @@ toolButtons.forEach((button) => {
     button.addEventListener('click', () => setTool(button.dataset.tool));
 });
 
-document.getElementById('add-text-btn').addEventListener('click', addTextBox);
-document.getElementById('add-note-btn').addEventListener('click', addNote);
+document.getElementById('add-text-btn').addEventListener('click', () => addTextBox());
+document.getElementById('add-note-btn').addEventListener('click', () => addNote());
+document.getElementById('empty-note-btn').addEventListener('click', () => addNote());
+document.getElementById('empty-text-btn').addEventListener('click', () => addTextBox());
+document.getElementById('empty-templates-btn').addEventListener('click', openTemplates);
+document.getElementById('help-btn').addEventListener('click', openHelp);
+document.getElementById('boards-btn').addEventListener('click', openBoardsDialog);
+document.getElementById('new-board-btn').addEventListener('click', startNewBoard);
+document.getElementById('board-templates-btn').addEventListener('click', openTemplates);
+document.getElementById('export-pdf-btn').addEventListener('click', exportPdf);
+moreToolsButton.addEventListener('click', () => setRailExpanded(!toolRail.classList.contains('expanded')));
+
+document.querySelectorAll('[data-close-dialog]').forEach((button) => {
+    button.addEventListener('click', () => button.closest('dialog').close());
+});
+
+// Clicking the dimmed area around a dialog closes it.
+DIALOGS.forEach((dialog) => {
+    dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+            dialog.close();
+        }
+    });
+});
 document.getElementById('font-down').addEventListener('click', () => stepFontSize(-1));
 document.getElementById('font-up').addEventListener('click', () => stepFontSize(1));
 zoomInButton.addEventListener('click', () => stepZoom(1));

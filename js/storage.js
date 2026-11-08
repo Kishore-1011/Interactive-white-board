@@ -258,7 +258,7 @@ function drawExportItem(target, item) {
     target.restore();
 }
 
-function exportPng() {
+function renderBoardCanvas() {
     const area = exportArea();
     const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_SIZE / Math.max(area.w, area.h));
     const output = document.createElement('canvas');
@@ -292,7 +292,11 @@ function exportPng() {
         target.restore();
     });
 
-    output.toBlob((blob) => downloadBlob(blob, exportFilename('png')), 'image/png');
+    return output;
+}
+
+function exportPng() {
+    renderBoardCanvas().toBlob((blob) => downloadBlob(blob, exportFilename('png')), 'image/png');
 }
 
 async function importJson() {
