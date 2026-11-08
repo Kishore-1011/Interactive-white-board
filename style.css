@@ -12,9 +12,6 @@ body {
 
 #white-board {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: #fff;
     overflow: hidden;
     position: relative;
@@ -49,6 +46,16 @@ body {
     position: absolute;
     padding: 5px;
     cursor: move;
+    width: max-content;
+    max-width: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.text-box[contenteditable="true"] {
+    cursor: text;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .custom-range {
@@ -68,7 +75,7 @@ body {
 }
 
 .selected {
-    border: 2px solid #007bff;
+    outline: 2px solid #007bff;
 }
 
 #undo-redo-buttons {
